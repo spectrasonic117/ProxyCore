@@ -35,3 +35,9 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release.set(targetJavaVersion)
 }
+
+processResources {
+    filesMatching('version.properties') {
+        expand(version: version)
+    }
+}
