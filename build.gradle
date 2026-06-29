@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+    id 'eclipse'
+}
+
+group = "${group}"
+version = "${PluginVersion}"
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "papermc-repo"
+        url = "https://repo.papermc.io/repository/maven-public/"
+    }
+}
+
+dependencies {
+    compileOnly("com.velocitypowered:velocity-api:${velocityVersion}")
+    annotationProcessor("com.velocitypowered:velocity-api:${velocityVersion}")
+    compileOnly("net.kyori:adventure-text-minimessage:${MiniMessageVersion}")
+}
+
+def targetJavaVersion = 21
+
+jar{
+    destinationDirectory = file("${rootDir}/out")
+    archiveFileName = "${rootProject.name}-${version}.jar"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release.set(targetJavaVersion)
+}
