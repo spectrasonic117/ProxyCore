@@ -10,8 +10,8 @@ motd:
   maintenance: false
   # Lines shown when maintenance is enabled (supports MiniMessage)
   maintenance-lines:
-    - "<red>⚠ Server under maintenance</red>"
-    - "<gray>We'll be back soon!</gray>"
+    - "<yellow>⚠ <red>El Servidor esta en mantenimiento!</red> ⚠</yellow>"
+    - "<gray>Regresa en un rato!</gray>"
   # Lines shown in the server list (supports MiniMessage)
   players:
     - "<gradient:gold:yellow>✦ Dopamine Network ✦</gradient>"
