@@ -116,7 +116,7 @@ public class Main {
         }
     }
 
-    private String getAnsiColorCode(net.kyori.adventure.text.format.TextColor color) {
+    private String getAnsiColorCode(TextColor color) {
         int red = color.red();
         int green = color.green();
         int blue = color.blue();
