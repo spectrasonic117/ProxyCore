@@ -3,16 +3,19 @@ package com.spectrasonic.ProxyCore.listener;
 import com.spectrasonic.ProxyCore.config.ConfigManager;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
-@SuppressWarnings("deprecation")
 public class MOTDListener {
+
+    private static final int MAX_SAMPLE_PLAYERS = 10;
+    private static final int MIN_MAX_PLAYERS = 100;
 
     private final ProxyServer proxy;
     private final ConfigManager configManager;
@@ -26,46 +29,51 @@ public class MOTDListener {
 
     @Subscribe
     public void onProxyPing(ProxyPingEvent event) {
-        ServerPing ping = event.getPing();
-        ServerPing.Builder builder = ping.asBuilder();
-        int onlinePlayers = proxy.getPlayerCount();
-        int maxPlayers = Math.max(onlinePlayers + 1, 100);
-
-        if (configManager.isMaintenance()) {
-            List<Component> maintenanceLines = new ArrayList<>();
-            for (String line : configManager.getMotdMaintenanceLines()) {
-                maintenanceLines.add(miniMessage.deserialize(line));
-            }
-            builder.description(Component.join(Component.newline(), maintenanceLines));
-            builder.onlinePlayers(onlinePlayers);
-            builder.maximumPlayers(maxPlayers);
-            builder.clearSamplePlayers();
-            event.setPing(builder.build());
+        // Custom MOTD disabled: leave Velocity's default ping untouched
+        if (!configManager.isMotdEnabled()) {
             return;
         }
 
-        List<Component> motdLines = new ArrayList<>();
-        for (String line : configManager.getMotdPlayers()) {
-            motdLines.add(miniMessage.deserialize(line));
-        }
-        Component description = Component.join(Component.newline(), motdLines);
-        builder.description(description);
+        ServerPing ping = event.getPing();
+        ServerPing.Builder builder = ping.asBuilder();
+        int onlinePlayers = proxy.getPlayerCount();
+        int maxPlayers = Math.max(onlinePlayers + 1, MIN_MAX_PLAYERS);
 
+        List<String> lines = configManager.isMaintenance()
+                ? configManager.getMotdMaintenanceLines()
+                : configManager.getMotdPlayers();
+
+        builder.description(parseLines(lines));
         builder.onlinePlayers(onlinePlayers);
         builder.maximumPlayers(maxPlayers);
 
-        builder.clearSamplePlayers();
-        List<ServerPing.SamplePlayer> samplePlayers = new ArrayList<>();
-        int count = Math.min(onlinePlayers, 10);
-        int added = 0;
-        for (var player : proxy.getAllPlayers()) {
-            if (added >= count)
-                break;
-            samplePlayers.add(new ServerPing.SamplePlayer(player.getUsername(), UUID.randomUUID()));
-            added++;
+        if (configManager.isMaintenance()) {
+            builder.clearSamplePlayers();
+        } else {
+            builder.clearSamplePlayers();
+            builder.samplePlayers(buildSamplePlayers(onlinePlayers));
         }
-        builder.samplePlayers(samplePlayers.toArray(new ServerPing.SamplePlayer[0]));
 
         event.setPing(builder.build());
+    }
+
+    private Component parseLines(List<String> lines) {
+        List<Component> components = new ArrayList<>(lines.size());
+        for (String line : lines) {
+            components.add(miniMessage.deserialize(line));
+        }
+        return Component.join(JoinConfiguration.newlines(), components);
+    }
+
+    private List<ServerPing.SamplePlayer> buildSamplePlayers(int onlinePlayers) {
+        List<ServerPing.SamplePlayer> samplePlayers = new ArrayList<>();
+        int count = Math.min(onlinePlayers, MAX_SAMPLE_PLAYERS);
+        for (Player player : proxy.getAllPlayers()) {
+            if (samplePlayers.size() >= count) {
+                break;
+            }
+            samplePlayers.add(new ServerPing.SamplePlayer(player.getUsername(), player.getUniqueId()));
+        }
+        return samplePlayers;
     }
 }

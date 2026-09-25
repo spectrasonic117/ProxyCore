@@ -20,7 +20,7 @@ dependencies {
     compileOnly("net.kyori:adventure-text-minimessage:${MiniMessageVersion}")
 }
 
-def targetJavaVersion = 21
+def targetJavaVersion = 25
 
 jar{
     destinationDirectory = file("${rootDir}/out")

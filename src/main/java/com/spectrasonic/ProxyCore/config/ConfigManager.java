@@ -85,6 +85,12 @@ public class ConfigManager {
 
     // --- MOTD ---
 
+    public boolean isMotdEnabled() {
+        Map<String, Object> motd = getSection("motd");
+        Object value = motd.get("enabled");
+        return value instanceof Boolean ? (Boolean) value : true;
+    }
+
     public boolean isMaintenance() {
         Map<String, Object> motd = getSection("motd");
         Object value = motd.get("maintenance");
@@ -215,6 +221,7 @@ public class ConfigManager {
         defaults.put("target-server", "lobby");
 
         Map<String, Object> motd = new LinkedHashMap<>();
+        motd.put("enabled", true);
         motd.put("maintenance", false);
         List<String> maintenanceLines = new ArrayList<>();
         maintenanceLines.add("<red>⚠ Server under maintenance</red>");

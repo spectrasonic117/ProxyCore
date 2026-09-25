@@ -6,39 +6,40 @@ target-server: "lobby"
 
 # MOTD Configuration
 motd:
-  # Enable maintenance mode (displays maintenance message in server list)
-  maintenance: false
-  # Lines shown when maintenance is enabled (supports MiniMessage)
-  maintenance-lines:
-    - "<yellow>⚠ <red>El Servidor esta en mantenimiento!</red> ⚠</yellow>"
-    - "<gray>Regresa en un rato!</gray>"
-  # Lines shown in the server list (supports MiniMessage)
-  players:
-    - "<gradient:gold:yellow>✦ Dopamine Network ✦</gradient>"
-    - "<green>Join us at play.dopamine.xyz</green>"
+    enabled: true
+    # Enable maintenance mode (displays maintenance message in server list)
+    maintenance: false
+    # Lines shown when maintenance is enabled (supports MiniMessage)
+    maintenance-lines:
+        - "<yellow>⚠ <red>El Servidor esta en mantenimiento!</red> ⚠</yellow>"
+        - "<gray>Regresa en un rato!</gray>"
+    # Lines shown in the server list (supports MiniMessage)
+    players:
+        - "<gradient:gold:yellow>✦ Dopamine Network ✦</gradient>"
+        - "<green>Join us at play.dopamine.xyz</green>"
 
 # Announcements Configuration
 announcements:
-  # Enable automatic announcements in chat
-  enabled: false
-  # Time between announcements in seconds
-  interval-seconds: 300
-  # Messages to broadcast (supports MiniMessage)
-  messages:
-    - "<gradient:aqua:light_purple>★ Welcome to Dopamine Network!</gradient>"
-    - "<yellow>⚡ Use /hub to return to the lobby</yellow>"
+    # Enable automatic announcements in chat
+    enabled: false
+    # Time between announcements in seconds
+    interval-seconds: 300
+    # Messages to broadcast (supports MiniMessage)
+    messages:
+        - "<gradient:aqua:light_purple>★ Welcome to Dopamine Network!</gradient>"
+        - "<yellow>⚡ Use /hub to return to the lobby</yellow>"
 
 # Chat Configuration
 chat:
-  # Broadcast command format (placeholder: {message})
-  broadcast:
-    format: "<dark_gray>[</dark_gray><red>Broadcast</red><dark_gray>]</dark_gray> <white>{message}</white>"
-  # Staff chat format (placeholders: {player}, {message})
-  staff:
-    format: "<dark_gray>[</dark_gray><red>🛡 Staff</red><dark_gray>]</dark_gray> <dark_red>{player}</dark_red><dark_gray>:</dark_gray> <white>{message}</white>"
+    # Broadcast command format (placeholder: {message})
+    broadcast:
+        format: "<dark_gray>[</dark_gray><red>Broadcast</red><dark_gray>]</dark_gray> <white>{message}</white>"
+    # Staff chat format (placeholders: {player}, {message})
+    staff:
+        format: "<dark_gray>[</dark_gray><red>🛡 Staff</red><dark_gray>]</dark_gray> <dark_red>{player}</dark_red><dark_gray>:</dark_gray> <white>{message}</white>"
 
 # Resource Pack Configuration
 resource-pack:
-  enabled: false
-  url: ""
-  sha1: ""
+    enabled: false
+    url: ""
+    sha1: ""
