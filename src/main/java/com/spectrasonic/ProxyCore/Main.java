@@ -16,11 +16,8 @@ import java.nio.file.Path;
 import java.util.Properties;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.ansi.ANSIComponentSerializer;
 import org.slf4j.Logger;
-
-import net.kyori.adventure.text.format.Style;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.TextColor;
 
 @Plugin(id = "proxycore", name = "ProxyCore", version = "${project.version}", description = "A Spectrasonic Proxy Plugin", url = "spectrasonic.xyz", authors = {
         "Spectrasonic" })
@@ -30,6 +27,14 @@ public class Main {
     private final Logger logger;
     private final Path dataDirectory;
     private AnnouncementManager announcementManager;
+
+    /**
+     * Serializes {@link Component}s to ANSI escape codes for the console. Bundled with
+     * Velocity ({@code adventure-text-serializer-ansi}); auto-detects the terminal color
+     * level ({@code ColorLevel.compute()}) and emits plain text when ANSI is unsupported,
+     * so headless consoles never receive raw escape sequences.
+     */
+    private static final ANSIComponentSerializer ANSI_SERIALIZER = ANSIComponentSerializer.ansi();
 
     @Inject
     public Main(ProxyServer proxy, Logger logger, @DataDirectory Path dataDirectory) {
@@ -84,65 +89,8 @@ public class Main {
 
         for (String line : lines) {
             Component component = miniMessage.deserialize(line);
-            logger.info("{}", serializeToAnsi(component));
+            logger.info("{}", ANSI_SERIALIZER.serialize(component));
         }
-    }
-
-    private String serializeToAnsi(Component component) {
-        StringBuilder sb = new StringBuilder();
-        appendAnsi(component, sb);
-        return sb.toString();
-    }
-
-    private void appendAnsi(Component component, StringBuilder sb) {
-        Style style = component.style();
-        TextColor color = style.color();
-        boolean hasColor = color != null;
-
-        if (hasColor) {
-            sb.append("\033[").append(getAnsiColorCode(color)).append("m");
-        }
-
-        if (component instanceof TextComponent textComp) {
-            sb.append(textComp.content());
-        }
-
-        for (Component child : component.children()) {
-            appendAnsi(child, sb);
-        }
-
-        if (hasColor) {
-            sb.append("\033[0m");
-        }
-    }
-
-    private String getAnsiColorCode(TextColor color) {
-        int red = color.red();
-        int green = color.green();
-        int blue = color.blue();
-        if (red == 0 && green == 255 && blue == 255)
-            return "36"; // aqua
-        if (red == 255 && green == 255 && blue == 255)
-            return "37"; // white
-        if (red == 255 && green == 255 && blue == 0)
-            return "33"; // yellow
-        if (red == 255 && green == 0 && blue == 0)
-            return "31"; // red
-        if (red == 0 && green == 255 && blue == 0)
-            return "32"; // green
-        if (red == 255 && green == 170 && blue == 0)
-            return "33"; // gold
-        if (red == 0 && green == 0 && blue == 255)
-            return "34"; // blue
-        if (red == 170 && green == 0 && blue == 170)
-            return "35"; // purple
-        if (red == 255 && green == 170 && blue == 170)
-            return "91"; // light red
-        if (red == 170 && green == 170 && blue == 255)
-            return "94"; // light blue
-        if (red == 170 && green == 170 && blue == 170)
-            return "90"; // gray
-        return "37";
     }
 
     private String getVersion() {

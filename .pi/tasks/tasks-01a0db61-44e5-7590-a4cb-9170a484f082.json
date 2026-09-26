@@ -1,0 +1,53 @@
+{
+  "nextId": 5,
+  "tasks": [
+    {
+      "id": "1",
+      "subject": "Implementar gates de permisos en comandos ProxyCore",
+      "description": "Aplicar la política unificada: gate in-execute para /broadcast, /maintenance, /motd reload, /announce; remover hasPermission overrides (que reenvían al backend) en Find, Goto, Maintenance, MotdReload, Announce.",
+      "status": "completed",
+      "activeForm": "Implementando gates de permisos",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1790392586668,
+      "updatedAt": 1790392807655
+    },
+    {
+      "id": "2",
+      "subject": "Compilar con Gradle y verificar",
+      "description": "Ejecutar ./gradlew build y verificar que compila limpio.",
+      "status": "completed",
+      "activeForm": "Compilando el proyecto",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1790392586669,
+      "updatedAt": 1790392848581
+    },
+    {
+      "id": "3",
+      "subject": "Crear README.md con uso, comandos y permisos",
+      "description": "README en español: descripción, requisitos, build, tabla de comandos con alias, tabla de permisos con defaults, configuración, canales plugin messaging, limitaciones conocidas.",
+      "status": "completed",
+      "activeForm": "Creando README.md",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1790392586669,
+      "updatedAt": 1790392968260
+    },
+    {
+      "id": "4",
+      "subject": "Actualizar AGENTS.md para reflejar cambios",
+      "description": "Actualizar tabla de permisos (agregar ProxyCore.broadcast) y gotchas de permisos; corregir versiones de tech stack si están desactualizadas.",
+      "status": "completed",
+      "activeForm": "Actualizando AGENTS.md",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1790392586670,
+      "updatedAt": 1790392998616
+    }
+  ]
+}

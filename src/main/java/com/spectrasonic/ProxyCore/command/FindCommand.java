@@ -69,9 +69,4 @@ public class FindCommand implements SimpleCommand {
                 () -> invocation.source().sendMessage(miniMessage.deserialize(
                         "<red>Could not determine " + target.getUsername() + "'s server.</red>")));
     }
-
-    @Override
-    public boolean hasPermission(Invocation invocation) {
-        return invocation.source().hasPermission("ProxyCore.find");
-    }
 }

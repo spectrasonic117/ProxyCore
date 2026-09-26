@@ -16,6 +16,12 @@ public class MotdReloadCommand implements SimpleCommand {
 
     @Override
     public void execute(Invocation invocation) {
+        if (!invocation.source().hasPermission("ProxyCore.motd")) {
+            invocation.source().sendMessage(
+                    miniMessage.deserialize("<red>You don't have permission to use this command.</red>"));
+            return;
+        }
+
         String[] args = invocation.arguments();
         if (args.length == 0 || !"reload".equalsIgnoreCase(args[0])) {
             invocation.source().sendMessage(
@@ -25,10 +31,5 @@ public class MotdReloadCommand implements SimpleCommand {
         configManager.load();
         invocation.source().sendMessage(
                 miniMessage.deserialize("<green>✓ MOTD configuration reloaded from config.yml.</green>"));
-    }
-
-    @Override
-    public boolean hasPermission(Invocation invocation) {
-        return invocation.source().hasPermission("ProxyCore.motd");
     }
 }

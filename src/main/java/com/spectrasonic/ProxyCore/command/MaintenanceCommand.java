@@ -20,6 +20,12 @@ public class MaintenanceCommand implements SimpleCommand {
 
     @Override
     public void execute(Invocation invocation) {
+        if (!invocation.source().hasPermission("ProxyCore.maintenance")) {
+            invocation.source().sendMessage(
+                    miniMessage.deserialize("<red>You don't have permission to use this command.</red>"));
+            return;
+        }
+
         String[] args = invocation.arguments();
 
         if (args.length == 0) {
@@ -57,10 +63,5 @@ public class MaintenanceCommand implements SimpleCommand {
                 player.sendMessage(miniMessage.deserialize(message));
             }
         }
-    }
-
-    @Override
-    public boolean hasPermission(Invocation invocation) {
-        return invocation.source().hasPermission("ProxyCore.maintenance");
     }
 }

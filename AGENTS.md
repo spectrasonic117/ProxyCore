@@ -5,17 +5,17 @@ Velocity proxy plugin for Minecraft servers (Dopamine Network).
 ## Build Commands
 
 ```bash
-./gradlew build          # Build the plugin JAR
-./gradlew clean build    # Clean and rebuild
+gradle build          # Build the plugin JAR (Gradle 9.x local, no wrapper included)
+gradle clean build    # Clean and rebuild
 ```
 
 Output JAR: `out/ProxyCore-<version>.jar`
 
 ## Tech Stack
 
-- **Platform**: Velocity 3.4.0-SNAPSHOT proxy
-- **Java**: 21 (enforced via toolchain)
-- **Build**: Gradle 8.8
+- **Platform**: Velocity 4.2.1-SNAPSHOT proxy
+- **Java**: 25 (enforced via toolchain)
+- **Build**: Gradle 9.5.1
 - **Text formatting**: Adventure MiniMessage 4.17.0
 - **Config**: SnakeYAML (bundled with Velocity)
 
@@ -89,7 +89,7 @@ Key config sections:
 
 ## Gotchas
 
-- **No permission annotations**: Commands check permissions manually in `execute()` or override `hasPermission()`. Not all commands have permission checks.
+- **Permission gates are proxy-side**: every admin command checks its permission at the start of `execute()` and rejects with a MiniMessage error. The `hasPermission()` overrides were removed on purpose — when they return `false`, Velocity forwards the command to the player's backend server (confusing "unknown command" instead of a clean denial). Only `/lobby` has no permission check (by design).
 - **Static staff chat state**: `StaffChatCommand.STAFF_CHAT_TOGGLED` is a static synchronized set - survives command re-registration but lost on proxy restart.
 - **Config save on toggle**: `/maintenance` and `/announce` call `configManager.setMaintenance()`/`setAnnouncementsEnabled()` which persist to disk immediately.
 - **Resource pack config exists** but is not wired to any listener - `isResourcePackEnabled()`, `getResourcePackUrl()`, `getResourcePackSha1()` are unused.
@@ -104,7 +104,7 @@ Key config sections:
 | /find | ProxyCore.find | op |
 | /goto | ProxyCore.goto | op |
 | /staffchat, /sc | ProxyCore.staffchat | op |
-| /broadcast, /br | None (check missing) | - |
+| /broadcast, /br | ProxyCore.broadcast | op |
 | /maintenance | ProxyCore.maintenance | op |
 | /motd reload | ProxyCore.motd | op |
 | /announce | ProxyCore.announce | op |

@@ -29,6 +29,12 @@ public class BroadcastCommand implements SimpleCommand {
 
     @Override
     public void execute(Invocation invocation) {
+        if (!invocation.source().hasPermission("ProxyCore.broadcast")) {
+            invocation.source().sendMessage(
+                    miniMessage.deserialize("<red>You don't have permission to use this command.</red>"));
+            return;
+        }
+
         String[] args = invocation.arguments();
         if (args.length == 0) {
             invocation.source().sendMessage(

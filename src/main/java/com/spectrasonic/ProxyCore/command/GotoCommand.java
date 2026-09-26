@@ -84,9 +84,4 @@ public class GotoCommand implements SimpleCommand {
             }
         });
     }
-
-    @Override
-    public boolean hasPermission(Invocation invocation) {
-        return invocation.source().hasPermission("ProxyCore.goto");
-    }
 }

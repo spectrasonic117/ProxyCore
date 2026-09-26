@@ -1,6 +1,6 @@
 # 📦 ProxyCore — Memory Bank
 
-> **Última actualización:** 2026-09-25 14:29
+> **Última actualización:** 2026-09-25 16:15
 > **Proyecto:** ProxyCore v1.0.1
 > **Plataforma:** Velocity Proxy 4.2.1-SNAPSHOT (MC 1.21.x+)
 > **API:** velocity-api (PaperMC)
@@ -89,6 +89,7 @@ src/main/resources/
 - [x] Flag `motd.enabled` cableado (ConfigManager + MOTDListener) — 2026-09-25
 - [x] Migración `Component.join` → `JoinConfiguration.newlines()` (compilable contra Velocity 4.2.1) — 2026-09-25
 - [x] Build verificado: `gradle clean build` OK → `out/ProxyCore-1.0.1.jar` — 2026-09-25
+- [x] Logo con colores reales en consola: `ANSIComponentSerializer.ansi()` reemplazó al serializer ANSI manual con mapeo RGB erróneo — 2026-09-25
 
 ### Pendiente
 - [ ] `resource-pack` en config existe pero no está cableado a ningún listener (sin uso)
@@ -105,7 +106,19 @@ src/main/resources/
 - **Solución:** `Component.join(JoinConfiguration.newlines(), components)` con import `net.kyori.adventure.text.JoinConfiguration`.
 - **Archivos afectados:** `listener/MOTDListener.java`
 
+### Colores del logo ANSI no se mostraban en la consola — RESUELTO
+- **Síntoma:** El logo de inicio de ProxyCore salía todo en blanco plano, sin colores, aunque emitía códigos ANSI.
+- **Causa (bug principal):** El serializer ANSI hecho a mano (`getAnsiColorCode`) comparaba contra RGB "puros" del ANSI clásico (`0,255,255` aqua, `255,255,0` amarillo, etc.), pero Adventure usa la paleta Minecraft: aqua `#55FFFF`=(85,255,255), yellow `#FFFF55`, red `#FF5555`, green `#55FF55`. Ningún branch matcheaba → todos los colores caían al default `"37"` (blanco) → logo monocromo.
+- **Causa (secundaria, por diseño de Velocity):** el appender de archivo en `log4j2.xml` de Velocity usa `%stripAnsi{%msg}` → `logs/latest.log` NUNCA tendrá colores. Los colores solo son visibles en la consola live. Velocity detecta ANSI con `TerminalConsoleAppender.isAnsiSupported()` (JLine; `-Dterminal.ansi` lo sobreescribe).
+- **Solución:** Eliminado el serializer manual (~60 líneas); reemplazado por `ANSIComponentSerializer.ansi()` (adventure-text-serializer-ansi 5.2.0, transitivo de velocity-api, sin cambios en build.gradle). Auto-detecta `ColorLevel.compute()` (respeta `-Dnet.kyori.ansi.colorLevel` y `-Dterminal.ansi=false`); con nivel NONE emite texto plano limpio (sin basura en paneles/headless). En paneles tipo Pterodactyl que renderizan ANSI, forzar colores con `-Dnet.kyori.ansi.colorLevel=truecolor` en los flags JVM del proxy.
+- **Verificación:** Test local con los jars reales del classpath: OLD emitía `ESC[37m` para todo; NEW emite `ESC[96m` (aqua), `ESC[97m` (white), `ESC[93m` (yellow), `ESC[91m` (red), `ESC[92m` (green) en modo 16 colores (truecolor → `38;2;R;G;B`).
+- **Archivos afectados:** `Main.java`
+
 ## 📜 Bitácora de Cambios
+
+### 2026-09-25 — Colores del logo en consola (bug RGB + serializer oficial)
+- **Archivos modificados:** `Main.java`
+- **Descripción:** El logo de inicio salía monocromo porque el mapper ANSI manual comparaba RGB clásicos (`0,255,255` etc.) contra la paleta Minecraft de Adventure (`#55FFFF` aqua, `#FFFF55` yellow, `#FF5555` red, `#55FF55` green) — ningún color matcheaba y todo caía a `"37"` (blanco). Se eliminaron `serializeToAnsi`/`appendAnsi`/`getAnsiColorCode` (~60 líneas) y se usa `ANSIComponentSerializer.ansi()` (transitivo de velocity-api 4.2.1, Adventure 5.2.0), que detecta el nivel de color del terminal (`ColorLevel.compute()`, respeta `-Dnet.kyori.ansi.colorLevel`) y degrada a texto plano en entornos headless. Nota: `logs/latest.log` nunca tendrá colores — Velocity aplica `%stripAnsi` en el file appender por diseño; los colores solo viven en la consola live. Verificado empíricamente: aqua→`ESC[96m`, yellow→`ESC[93m`, red→`ESC[91m`, green→`ESC[92m`. Build OK → `out/ProxyCore-1.0.1.jar`.
 
 ### 2026-09-25 — Habilitar y cablear MOTD del proxy
 - **Archivos modificados:** `config/ConfigManager.java`, `listener/MOTDListener.java`, `src/main/resources/config.yml` (por el usuario)
