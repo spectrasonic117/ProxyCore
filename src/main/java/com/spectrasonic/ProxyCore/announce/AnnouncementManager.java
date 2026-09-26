@@ -68,6 +68,14 @@ public class AnnouncementManager {
 
     public void reload() {
         configManager.load();
+        restart();
+    }
+
+    /**
+     * Stops the scheduled task and starts it again, picking up the interval and messages currently
+     * held by the {@link ConfigManager}. Does nothing when announcements are disabled.
+     */
+    public void restart() {
         stop();
         start();
     }

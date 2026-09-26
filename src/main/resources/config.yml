@@ -43,3 +43,42 @@ resource-pack:
     enabled: false
     url: ""
     sha1: ""
+
+# Command Blocker (strict whitelist)
+# Any command a player runs that is NOT in this list is blocked in the proxy and never
+# reaches the backend servers. Players with ProxyCore.commandblocker.bypass are exempt.
+command-blocker:
+    # Master switch. false = the blocker is completely disabled
+    enabled: true
+    # Allowed command names. Write the bare name, without slash and without arguments.
+    # Namespaces are ignored, so "gamemode" also covers "/minecraft:gamemode creative",
+    # "/GAMEMODE" and every plugin-namespaced variant of the same command.
+    whitelist:
+        - "lobby"
+        - "server"
+        - "hub"
+        - "spawn"
+        - "leave"
+        - "server"
+        - "msg"
+        - "tell"
+        - "w"
+        - "r"
+        - "reply"
+        - "help"
+        - "proxycore"
+        - "login"
+        - "register"
+        - "changepassword"
+    # Message sent to the player when a command is blocked (supports MiniMessage)
+    # Placeholders: {player}, {command}, {server}
+    deny-message: "<dark_gray>[</dark_gray><red>Blocked</red><dark_gray>]</dark_gray> <gray>You cannot use <white>{command}</white> on this network.</gray>"
+    # Log every blocked attempt in the proxy console
+    log-attempts: true
+    # Console log format. Placeholders: {player}, {server}, {command}, {raw}
+    log-format: "Blocked command: player={player}, server={server}, command={command}, raw={raw}"
+    # Also hide blocked commands from tab-completion suggestions
+    block-tab-complete: true
+    # Never block commands registered on the proxy itself, even if they are missing from
+    # the whitelist. Recommended: keeps admins from locking themselves out.
+    always-allow-proxy-commands: true

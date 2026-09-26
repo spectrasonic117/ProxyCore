@@ -9,6 +9,7 @@ import com.spectrasonic.ProxyCore.command.GotoCommand;
 import com.spectrasonic.ProxyCore.command.LobbyCommand;
 import com.spectrasonic.ProxyCore.command.MaintenanceCommand;
 import com.spectrasonic.ProxyCore.command.MotdReloadCommand;
+import com.spectrasonic.ProxyCore.command.ProxyCoreCommand;
 import com.spectrasonic.ProxyCore.config.ConfigManager;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -59,6 +60,11 @@ public class CommandsManager {
         BroadcastCommand broadcastCommand = new BroadcastCommand(proxy, configManager);
         commandManager.register(commandManager.metaBuilder("broadcast").plugin(plugin).build(), broadcastCommand);
         commandManager.register(commandManager.metaBuilder("br").plugin(plugin).build(), broadcastCommand);
+
+        ProxyCoreCommand proxyCoreCommand = new ProxyCoreCommand(configManager, announcementManager);
+        for (String alias : new String[] { "proxycore", "pcore", "proxyreload" }) {
+            commandManager.register(commandManager.metaBuilder(alias).plugin(plugin).build(), proxyCoreCommand);
+        }
     }
 
     public StaffChatCommand getStaffChatCommand() {

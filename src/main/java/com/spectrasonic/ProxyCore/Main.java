@@ -58,13 +58,13 @@ public class Main {
         commandManager.registerAll();
 
         ListenerManager listenerManager = new ListenerManager(
-                proxy, configManager, this);
+                proxy, configManager, this, logger);
         listenerManager.registerAll();
 
         announcementManager.start();
 
         logger.info(
-                "ProxyCore modules initialized: Lobby, StaffChat, Broadcast, PlayerFind, Goto, Maintenance, MOTD, Announcements");
+                "ProxyCore modules initialized: Lobby, StaffChat, Broadcast, PlayerFind, Goto, Maintenance, MOTD, Announcements, CommandBlocker");
     }
 
     @Subscribe

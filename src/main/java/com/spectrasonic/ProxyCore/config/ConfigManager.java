@@ -1,5 +1,6 @@
 package com.spectrasonic.ProxyCore.config;
 
+import com.spectrasonic.ProxyCore.util.CommandNormalizer;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -11,12 +12,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 public class ConfigManager {
+
+    private static final String DEFAULT_DENY_MESSAGE = "<dark_gray>[</dark_gray><red>Blocked</red><dark_gray>]</dark_gray> "
+            + "<gray>You cannot use <white>{command}</white> on this network.</gray>";
+
+    private static final String DEFAULT_LOG_FORMAT = "Blocked command: player={player}, server={server}, "
+            + "command={command}, raw={raw}";
+
+    /** Commands allowed out of the box: network navigation, chat, auth and the reload command. */
+    private static final List<String> DEFAULT_COMMAND_WHITELIST = List.of(
+            "lobby", "hub", "spawn", "leave", "server", "msg", "tell", "w", "r", "reply", "help",
+            "proxycore", "login", "register", "changepassword");
 
     private final Path configPath;
     private final Yaml yaml;
@@ -38,9 +52,21 @@ public class ConfigManager {
         try (InputStreamReader reader = new InputStreamReader(new FileInputStream(configPath.toFile()),
                 StandardCharsets.UTF_8)) {
             Map<String, Object> loaded = yaml.load(reader);
-            config = loaded != null ? loaded : createDefaults();
+            config = loaded instanceof Map ? castToMap(loaded) : createDefaults();
+            applyDefaults();
         } catch (IOException e) {
             config = createDefaults();
+        }
+    }
+
+    /**
+     * Adds any top-level section missing from the user's file, so a config written before a new
+     * feature shipped picks up that feature's defaults without losing the user's own values. This is
+     * what makes {@code command-blocker} appear automatically on upgrade.
+     */
+    private void applyDefaults() {
+        for (Map.Entry<String, Object> entry : createDefaults().entrySet()) {
+            config.putIfAbsent(entry.getKey(), entry.getValue());
         }
     }
 
@@ -75,6 +101,25 @@ public class ConfigManager {
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to save config", e);
+        }
+    }
+
+    /**
+     * Reloads {@code config.yml} from disk, keeping the values that are currently in memory when
+     * the file cannot be parsed. Unlike {@link #load()}, SnakeYAML parse errors (a corrupt file)
+     * are caught here instead of bubbling up and leaving the proxy in a half-loaded state.
+     *
+     * @return {@code true} when the file was read successfully, {@code false} when it was missing
+     *         or corrupt and the previous values were kept
+     */
+    public boolean reload() {
+        Map<String, Object> previous = this.config;
+        try {
+            load();
+            return true;
+        } catch (RuntimeException e) {
+            this.config = previous != null ? previous : createDefaults();
+            return false;
         }
     }
 
@@ -192,7 +237,91 @@ public class ConfigManager {
                 : "<dark_gray>[</dark_gray><red>🛡 Staff</red><dark_gray>]</dark_gray> <dark_red>{player}</dark_red><dark_gray>:</dark_gray> <white>{message}</white>";
     }
 
+    // --- Command blocker ---
+
+    public boolean isCommandBlockerEnabled() {
+        return getBoolean(getSection("command-blocker"), "enabled", true);
+    }
+
+    /**
+     * Returns the normalized whitelist of command names players are allowed to run.
+     *
+     * <p>Entries are normalized with {@link CommandNormalizer#normalize(String)}, so writing
+     * {@code minecraft:gamemode} or {@code /GAMEMODE} in the config is equivalent to
+     * {@code gamemode}.
+     *
+     * <p>An explicitly empty list is honoured (it blocks everything that is not a proxy command),
+     * but a missing key falls back to the built-in list so an outdated config can never lock every
+     * player out of the network.
+     *
+     * @return a set of lowercase command names without namespace or arguments
+     */
+    public Set<String> getCommandBlockerWhitelist() {
+        Map<String, Object> blocker = getSection("command-blocker");
+        Object value = blocker.get("whitelist");
+        if (value == null) {
+            return normalizeAll(DEFAULT_COMMAND_WHITELIST);
+        }
+
+        Set<String> whitelist = new LinkedHashSet<>();
+        if (value instanceof List) {
+            for (Object item : (List<?>) value) {
+                String normalized = CommandNormalizer.normalize(item.toString());
+                if (!normalized.isEmpty()) {
+                    whitelist.add(normalized);
+                }
+            }
+        }
+        return whitelist;
+    }
+
+    public String getCommandBlockerDenyMessage() {
+        return getString(getSection("command-blocker"), "deny-message", DEFAULT_DENY_MESSAGE);
+    }
+
+    public boolean isCommandBlockerLoggingEnabled() {
+        return getBoolean(getSection("command-blocker"), "log-attempts", true);
+    }
+
+    public String getCommandBlockerLogFormat() {
+        return getString(getSection("command-blocker"), "log-format", DEFAULT_LOG_FORMAT);
+    }
+
+    public boolean isCommandBlockerTabCompleteBlocked() {
+        return getBoolean(getSection("command-blocker"), "block-tab-complete", true);
+    }
+
+    public boolean isCommandBlockerAlwaysAllowProxyCommands() {
+        return getBoolean(getSection("command-blocker"), "always-allow-proxy-commands", true);
+    }
+
     // --- Helpers ---
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> castToMap(Object value) {
+        return (Map<String, Object>) value;
+    }
+
+    private static Set<String> normalizeAll(List<String> rawCommands) {
+        Set<String> normalized = new LinkedHashSet<>();
+        for (String rawCommand : rawCommands) {
+            String name = CommandNormalizer.normalize(rawCommand);
+            if (!name.isEmpty()) {
+                normalized.add(name);
+            }
+        }
+        return normalized;
+    }
+
+    private static boolean getBoolean(Map<String, Object> section, String key, boolean fallback) {
+        Object value = section.get(key);
+        return value instanceof Boolean ? (Boolean) value : fallback;
+    }
+
+    private static String getString(Map<String, Object> section, String key, String fallback) {
+        Object value = section.get(key);
+        return value != null ? value.toString() : fallback;
+    }
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> getSection(String key) {
@@ -261,6 +390,16 @@ public class ConfigManager {
         resourcePack.put("url", "");
         resourcePack.put("sha1", "");
         defaults.put("resource-pack", resourcePack);
+
+        Map<String, Object> commandBlocker = new LinkedHashMap<>();
+        commandBlocker.put("enabled", true);
+        commandBlocker.put("whitelist", new ArrayList<>(DEFAULT_COMMAND_WHITELIST));
+        commandBlocker.put("deny-message", DEFAULT_DENY_MESSAGE);
+        commandBlocker.put("log-attempts", true);
+        commandBlocker.put("log-format", DEFAULT_LOG_FORMAT);
+        commandBlocker.put("block-tab-complete", true);
+        commandBlocker.put("always-allow-proxy-commands", true);
+        defaults.put("command-blocker", commandBlocker);
 
         return defaults;
     }
