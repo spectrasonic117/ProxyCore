@@ -121,3 +121,8 @@ runs/
 .vscode
 
 bin/
+
+.classpath
+.project
+.factorypath
+.settings/
