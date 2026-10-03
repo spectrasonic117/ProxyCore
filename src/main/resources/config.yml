@@ -79,6 +79,11 @@ command-blocker:
     log-format: "Blocked command: player={player}, server={server}, command={command}, raw={raw}"
     # Also hide blocked commands from tab-completion suggestions
     block-tab-complete: true
+    # Remove blocked commands from the command tree Velocity sends to the client, so they do
+    # not show up in the "/"-list nor in autocomplete on 1.13+ clients. This is cosmetic:
+    # blocked commands are still denied on execution. Note that commands registered on the
+    # proxy are only hidden if they are missing from the whitelist.
+    hide-from-client: true
     # Never block commands registered on the proxy itself, even if they are missing from
     # the whitelist. Recommended: keeps admins from locking themselves out.
     always-allow-proxy-commands: true

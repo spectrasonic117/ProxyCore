@@ -28,7 +28,7 @@ src/main/java/com/spectrasonic/ProxyCore/
 │   ├── LobbyCommand.java     # /lobby, /hub, /spawn, /leave
 │   ├── FindCommand.java      # /find <player>
 │   ├── GotoCommand.java      # /goto <player>
-│   ├── BroadcastCommand.java # /broadcast, /br
+│   ├── BroadcastCommand.java # /gbroadcast
 │   ├── AnnounceCommand.java  # /announce true|false|reload
 │   ├── MaintenanceCommand.java # /maintenance on|off
 │   ├── MotdReloadCommand.java  # /motd reload
@@ -91,13 +91,13 @@ Key config sections:
 - `announcements`: Enabled flag, interval, message list
 - `chat`: Broadcast and staff chat formats with `{message}`, `{player}`, `{server}` placeholders
 - `resource-pack`: URL and SHA1 (not yet wired to listener)
-- `command-blocker`: Enabled flag, whitelist, deny message, logging, tab-complete, proxy-commands escape hatch
+- `command-blocker`: Enabled flag, whitelist, deny message, logging, tab-complete, hide-from-client, proxy-commands escape hatch
 
 ## Gotchas
 
 - **Permission gates are proxy-side**: every admin command checks its permission at the start of `execute()` and rejects with a MiniMessage error. The `hasPermission()` overrides were removed on purpose — when they return `false`, Velocity forwards the command to the player's backend server (confusing "unknown command" instead of a clean denial). Only `/lobby` has no permission check (by design).
 - **`CommandExecuteEvent` result API**: in Velocity 4.x the result type is the nested `CommandExecuteEvent.CommandResult` with `allowed()` / `denied()` / `forwardToServer()`, **not** `ResultedEvent.GenericResult`. Use `denied()` so the command is neither executed nor forwarded to the backend.
-- **`PlayerAvailableCommandsEvent` is dead**: it still exists in the 4.2.1 API but Velocity never fires it, and the root node it would receive is the live shared Brigadier dispatcher root — mutating it would break command execution for everyone. Do not use it. `TabCompleteEvent` is the only tab hook, and Velocity only fires it for 1.12.2-and-below clients, so tab filtering is best-effort while execution blocking is absolute.
+- **`PlayerAvailableCommandsEvent` IS fired in Velocity 4** (an earlier note claiming otherwise was wrong). It is fired from `BackendPlaySessionHandler.handle(AvailableCommandsPacket)` once per backend command-tree packet, *after* `CommandGraphInjector.inject()` has added the proxy commands. The `rootNode` it exposes is the freshly deserialized node of that packet — a per-player copy — **not** the shared proxy dispatcher root: the injector rebuilds every node via `node.createBuilder()`, so pruning `getRootNode().getChildren()` is safe and does not affect command execution. `@Subscribe(order = ...)` is deprecated in 4.x; use `@Subscribe(priority = Short.MIN_VALUE)` to run last. Hiding a command here also removes it from 1.13+ client-side autocomplete. `TabCompleteEvent` is still the only tab hook for pre-1.13 clients, so keep both.
 - **Command matching is by base name**: `util/CommandNormalizer` trims, drops the leading slash, cuts arguments, lowercases and strips any `namespace:` prefix. The whitelist is normalized the same way, so `gamemode` and `minecraft:gamemode` are interchangeable entries.
 - **Missing top-level config sections are auto-merged**: `ConfigManager.applyDefaults()` runs on every `load()` and `putIfAbsent`s any section the user's file lacks, so features added in a new version appear without wiping existing values. A missing `whitelist` key falls back to `DEFAULT_COMMAND_WHITELIST`; an explicitly empty list is honoured as block-all.
 - **Use `configManager.reload()`, not `load()`, for hot reloads**: `load()` lets SnakeYAML `YAMLException` escape on a corrupt file. `reload()` catches it, keeps the previous in-memory config and returns `false` so the caller can warn.
@@ -115,7 +115,7 @@ Key config sections:
 | /find | ProxyCore.find | op |
 | /goto | ProxyCore.goto | op |
 | /staffchat, /sc | ProxyCore.staffchat | op |
-| /broadcast, /br | ProxyCore.broadcast | op |
+| /gbroadcast | ProxyCore.broadcast | op |
 | /maintenance | ProxyCore.maintenance | op |
 | /motd reload | ProxyCore.motd | op |
 | /announce | ProxyCore.announce | op |

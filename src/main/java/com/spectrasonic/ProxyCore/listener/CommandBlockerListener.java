@@ -4,6 +4,7 @@ import com.spectrasonic.ProxyCore.config.ConfigManager;
 import com.spectrasonic.ProxyCore.util.CommandNormalizer;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -80,7 +81,43 @@ public class CommandBlockerListener {
     }
 
     /**
+     * Removes commands the player may not run from the Brigadier tree Velocity forwards to the
+     * client, so they never show up in the {@code /} command list nor in the 1.13+ client-side
+     * autocomplete.
+     *
+     * <p>This is cosmetic only: {@link #onCommandExecute(CommandExecuteEvent)} remains the actual
+     * enforcement point, since a modified client can still send commands it was never offered.
+     *
+     * <p>Velocity fires this event once per backend {@code AvailableCommandsPacket}, after injecting
+     * the proxy commands, and the exposed {@link com.mojang.brigadier.tree.RootCommandNode} is the
+     * freshly deserialized node of that packet rather than the shared proxy dispatcher root. The
+     * proxy's own dispatcher is therefore never mutated and command execution is unaffected.
+     * Velocity injects the proxy commands before firing this event, so those are filtered too;
+     * {@link Subscribe#priority()} only orders plugin handlers against each other and the lowest
+     * value simply makes sure we run last, after any other plugin pruning the tree.
+     */
+    @Subscribe(priority = Short.MIN_VALUE)
+    @SuppressWarnings("UnstableApiUsage")
+    public void onPlayerAvailableCommands(PlayerAvailableCommandsEvent event) {
+        if (!configManager.isCommandBlockerEnabled()
+                || !configManager.isCommandBlockerHideFromClient()) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        if (player.hasPermission(BYPASS_PERMISSION)) {
+            return;
+        }
+
+        event.getRootNode().getChildren().removeIf(node ->
+                !isAllowed(player, CommandNormalizer.normalize(node.getName())));
+    }
+
+    /**
      * Hides tab-complete suggestions for commands the player may not run.
+     *
+     * <p>Only needed for pre-1.13 clients, which ask the proxy for suggestions instead of reading
+     * the Brigadier tree. Modern clients are covered by {@link #onPlayerAvailableCommands}.
      *
      * <p>Only applied to inputs that actually start a command, so block and player name
      * completions are left untouched.

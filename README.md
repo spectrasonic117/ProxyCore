@@ -126,6 +126,7 @@ command-blocker:
   log-attempts: true
   log-format: "..."            # {player}, {server}, {command}, {raw}
   block-tab-complete: true
+  hide-from-client: true
   always-allow-proxy-commands: true
 ```
 
@@ -174,7 +175,8 @@ equivalente. Los argumentos nunca se inspeccionan, solo el primer token.
 | `deny-message` | Mensaje al jugador (MiniMessage). Placeholders: `{player}`, `{command}`, `{server}`. |
 | `log-attempts` | Registra cada intento bloqueado en la consola del proxy. |
 | `log-format` | Formato del log. Placeholders: `{player}`, `{server}`, `{command}`, `{raw}`. |
-| `block-tab-complete` | Oculta también las sugerencias de Tab de los comandos bloqueados. |
+| `block-tab-complete` | Oculta también las sugerencias de Tab de los comandos bloqueados (clientes ≤1.12.2). |
+| `hide-from-client` | Elimina los comandos bloqueados del árbol de comandos que recibe el cliente, así que no aparecen al escribir `/` ni en el autocompletado de 1.13+. |
 | `always-allow-proxy-commands` | Nunca bloquea comandos registrados en el proxy. Recomendado: `true`. |
 
 ### Ejemplo
@@ -204,12 +206,21 @@ command-blocker:
 
 Tras editar el archivo, aplica los cambios con **`/proxycore reload`**. No hace falta reiniciar el proxy.
 
-### Limitación conocida de Tab
+### Tab y visibilidad en el cliente
 
-Velocity 4.x solo expone `TabCompleteEvent` para clientes **1.12.2 y anteriores**; en 1.13+ el
-autocompletado de comandos se resuelve con el árbol Brigadier interno del proxy y no hay evento
-público para filtrarlo. Por eso `block-tab-complete` es una **mejora de cortesía**: el bloqueo real
-siempre se aplica en la ejecución del comando, independently de la versión del cliente.
+Hay dos caminos complementarios:
+
+- **Clientes 1.13+**: el proxy reenvía al cliente el árbol Brigadier que envía el backend, más los
+  comandos del proxy inyectados. Con `hide-from-client: true` (`PlayerAvailableCommandsEvent`)
+  quitamos del árbol todo comando no permitido, así que desaparece tanto de la lista de `/` como
+  del autocompletado del cliente. La poda es segura: Velocity expone en ese evento una **copia**
+  del nodo deserializado de ese paquete, no el root compartido del dispatcher del proxy.
+- **Clientes ≤1.12.2**: no reciben árbol, preguntan al proxy. Ahí actúa `block-tab-complete`
+  sobre `TabCompleteEvent`.
+
+Ocultar es **cosmético**: un cliente modificado puede seguir enviando comandos que nunca se le
+ofrecieron. El bloqueo real siempre se aplica en `CommandExecuteEvent`, con independencia de la
+versión del cliente.
 
 ---
 
@@ -234,7 +245,8 @@ ProxyCore se comunica con los plugins de los servidores backend (Spigot/Paper) p
   no redirige el flujo de chat normal (el envío de mensajes con argumentos sí funciona).
   *Pendiente: consumir el toggle con `PlayerChatEvent` y persistirlo.*
 - **`resource-pack`**: la sección existe en config pero aún no está conectada a ningún listener.
-- **`block-tab-complete`**: en clientes 1.13+ el autocompletado de comandos lo resuelve el árbol Brigadier
-  interno de Velocity y no hay evento público para filtrarlo. El bloqueo de **ejecución** sí es absoluto.
+- **`hide-from-client`** depende de que el backend envíe su árbol de comandos (paquete
+  `AvailableCommandsPacket`); solo surte efecto sobre los comandos del proxy si `announce-proxy-commands`
+  está activo.
 - **`/broadcast`** no aplica límite de longitud ni escapa tags MiniMessage del mensaje (uso solo para staff de confianza).
 - **`AGENTS.md`**: documentación interna de desarrollo del proyecto.

@@ -291,6 +291,18 @@ public class ConfigManager {
         return getBoolean(getSection("command-blocker"), "block-tab-complete", true);
     }
 
+    /**
+     * Returns whether blocked commands should be removed from the Brigadier tree sent to clients.
+     *
+     * <p>Only affects 1.13+ clients, where the server list of commands drives both the client-side
+     * autocomplete and what the player sees when typing {@code /}.
+     *
+     * @return true when commands the player may not run are hidden from the client
+     */
+    public boolean isCommandBlockerHideFromClient() {
+        return getBoolean(getSection("command-blocker"), "hide-from-client", true);
+    }
+
     public boolean isCommandBlockerAlwaysAllowProxyCommands() {
         return getBoolean(getSection("command-blocker"), "always-allow-proxy-commands", true);
     }
@@ -398,6 +410,7 @@ public class ConfigManager {
         commandBlocker.put("log-attempts", true);
         commandBlocker.put("log-format", DEFAULT_LOG_FORMAT);
         commandBlocker.put("block-tab-complete", true);
+        commandBlocker.put("hide-from-client", true);
         commandBlocker.put("always-allow-proxy-commands", true);
         defaults.put("command-blocker", commandBlocker);
 
