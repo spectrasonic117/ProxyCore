@@ -57,9 +57,9 @@ public class CommandsManager {
         AnnounceCommand announceCommand = new AnnounceCommand(announcementManager);
         commandManager.register(commandManager.metaBuilder("announce").plugin(plugin).build(), announceCommand);
 
+        // Registered as "gbroadcast" to avoid clashing with backend /broadcast commands
         BroadcastCommand broadcastCommand = new BroadcastCommand(proxy, configManager);
-        commandManager.register(commandManager.metaBuilder("broadcast").plugin(plugin).build(), broadcastCommand);
-        commandManager.register(commandManager.metaBuilder("br").plugin(plugin).build(), broadcastCommand);
+        commandManager.register(commandManager.metaBuilder("gbroadcast").plugin(plugin).build(), broadcastCommand);
 
         ProxyCoreCommand proxyCoreCommand = new ProxyCoreCommand(configManager, announcementManager);
         for (String alias : new String[] { "proxycore", "pcore", "proxyreload" }) {

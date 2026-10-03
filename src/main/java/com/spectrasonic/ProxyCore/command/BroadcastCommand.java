@@ -38,7 +38,7 @@ public class BroadcastCommand implements SimpleCommand {
         String[] args = invocation.arguments();
         if (args.length == 0) {
             invocation.source().sendMessage(
-                    MiniMessage.miniMessage().deserialize("<red>Usage: /broadcast <message></red>"));
+                    miniMessage.deserialize("<red>Usage: /gbroadcast <message></red>"));
             return;
         }
 
