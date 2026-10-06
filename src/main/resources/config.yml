@@ -87,3 +87,10 @@ command-blocker:
     # Never block commands registered on the proxy itself, even if they are missing from
     # the whitelist. Recommended: keeps admins from locking themselves out.
     always-allow-proxy-commands: true
+
+# Seen tracking (/seen) - store last connection data per player
+seen:
+    # Enable or disable the /seen tracking system
+    enabled: true
+    # Show the last known IP in /seen results (staff only command anyway)
+    show-ip: true

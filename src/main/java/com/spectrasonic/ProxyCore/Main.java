@@ -5,6 +5,7 @@ import com.spectrasonic.ProxyCore.announce.AnnouncementManager;
 import com.spectrasonic.ProxyCore.config.ConfigManager;
 import com.spectrasonic.ProxyCore.managers.CommandsManager;
 import com.spectrasonic.ProxyCore.managers.ListenerManager;
+import com.spectrasonic.ProxyCore.managers.SeenManager;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -27,6 +28,7 @@ public class Main {
     private final Logger logger;
     private final Path dataDirectory;
     private AnnouncementManager announcementManager;
+    private SeenManager seenManager;
 
     /**
      * Serializes {@link Component}s to ANSI escape codes for the console. Bundled with
@@ -53,24 +55,29 @@ public class Main {
 
         announcementManager = new AnnouncementManager(proxy, configManager);
 
+        seenManager = new SeenManager(dataDirectory, logger);
+
         CommandsManager commandManager = new CommandsManager(proxy, configManager, this,
-                announcementManager);
+                announcementManager, seenManager);
         commandManager.registerAll();
 
         ListenerManager listenerManager = new ListenerManager(
-                proxy, configManager, this, logger);
+                proxy, configManager, this, logger, seenManager);
         listenerManager.registerAll();
 
         announcementManager.start();
 
         logger.info(
-                "ProxyCore modules initialized: Lobby, StaffChat, Broadcast, PlayerFind, Goto, Maintenance, MOTD, Announcements, CommandBlocker");
+                "ProxyCore modules initialized: Lobby, StaffChat, Broadcast, PlayerFind, Goto, Whois, Seen, Maintenance, MOTD, Announcements, CommandBlocker");
     }
 
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
         if (announcementManager != null) {
             announcementManager.stop();
+        }
+        if (seenManager != null) {
+            seenManager.save();
         }
     }
 

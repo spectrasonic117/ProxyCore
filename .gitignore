@@ -126,3 +126,4 @@ bin/
 .project
 .factorypath
 .settings/
+.zcode/

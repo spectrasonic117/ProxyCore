@@ -307,6 +307,16 @@ public class ConfigManager {
         return getBoolean(getSection("command-blocker"), "always-allow-proxy-commands", true);
     }
 
+    // --- Seen ---
+
+    public boolean isSeenEnabled() {
+        return getBoolean(getSection("seen"), "enabled", true);
+    }
+
+    public boolean isSeenShowIp() {
+        return getBoolean(getSection("seen"), "show-ip", true);
+    }
+
     // --- Helpers ---
 
     @SuppressWarnings("unchecked")
@@ -413,6 +423,11 @@ public class ConfigManager {
         commandBlocker.put("hide-from-client", true);
         commandBlocker.put("always-allow-proxy-commands", true);
         defaults.put("command-blocker", commandBlocker);
+
+        Map<String, Object> seen = new LinkedHashMap<>();
+        seen.put("enabled", true);
+        seen.put("show-ip", true);
+        defaults.put("seen", seen);
 
         return defaults;
     }

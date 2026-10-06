@@ -10,6 +10,8 @@ import com.spectrasonic.ProxyCore.command.LobbyCommand;
 import com.spectrasonic.ProxyCore.command.MaintenanceCommand;
 import com.spectrasonic.ProxyCore.command.MotdReloadCommand;
 import com.spectrasonic.ProxyCore.command.ProxyCoreCommand;
+import com.spectrasonic.ProxyCore.command.SeenCommand;
+import com.spectrasonic.ProxyCore.command.WhoisCommand;
 import com.spectrasonic.ProxyCore.config.ConfigManager;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -20,14 +22,16 @@ public class CommandsManager {
     private final ConfigManager configManager;
     private final Object plugin;
     private final AnnouncementManager announcementManager;
+    private final SeenManager seenManager;
     private StaffChatCommand staffChatCommand;
 
     public CommandsManager(ProxyServer proxy, ConfigManager configManager, Object plugin,
-            AnnouncementManager announcementManager) {
+            AnnouncementManager announcementManager, SeenManager seenManager) {
         this.proxy = proxy;
         this.configManager = configManager;
         this.plugin = plugin;
         this.announcementManager = announcementManager;
+        this.seenManager = seenManager;
     }
 
     public void registerAll() {
@@ -47,6 +51,12 @@ public class CommandsManager {
 
         GotoCommand gotoCommand = new GotoCommand(proxy);
         commandManager.register(commandManager.metaBuilder("goto").plugin(plugin).build(), gotoCommand);
+
+        WhoisCommand whoisCommand = new WhoisCommand(proxy, seenManager);
+        commandManager.register(commandManager.metaBuilder("whois").plugin(plugin).build(), whoisCommand);
+
+        SeenCommand seenCommand = new SeenCommand(proxy, configManager, seenManager);
+        commandManager.register(commandManager.metaBuilder("seen").plugin(plugin).build(), seenCommand);
 
         MaintenanceCommand maintenanceCommand = new MaintenanceCommand(proxy, configManager);
         commandManager.register(commandManager.metaBuilder("maintenance").plugin(plugin).build(), maintenanceCommand);

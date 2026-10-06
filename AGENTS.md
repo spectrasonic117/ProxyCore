@@ -28,6 +28,8 @@ src/main/java/com/spectrasonic/ProxyCore/
 │   ├── LobbyCommand.java     # /lobby, /hub, /spawn, /leave
 │   ├── FindCommand.java      # /find <player>
 │   ├── GotoCommand.java      # /goto <player>
+│   ├── WhoisCommand.java     # /whois <player>
+│   ├── SeenCommand.java      # /seen <player>
 │   ├── BroadcastCommand.java # /gbroadcast
 │   ├── AnnounceCommand.java  # /announce true|false|reload
 │   ├── MaintenanceCommand.java # /maintenance on|off
@@ -37,7 +39,8 @@ src/main/java/com/spectrasonic/ProxyCore/
 │   └── StaffChatCommand.java # /staffchat, /sc (with toggle)
 ├── managers/
 │   ├── CommandsManager.java  # Central command registration
-│   └── ListenerManager.java  # Central event listener registration
+│   ├── ListenerManager.java  # Central event listener registration
+│   └── SeenManager.java      # Player connection history (seen-data.json via Gson)
 ├── config/
 │   └── ConfigManager.java    # YAML config load/save with defaults
 ├── announce/
@@ -46,7 +49,8 @@ src/main/java/com/spectrasonic/ProxyCore/
 │   └── CommandNormalizer.java # Raw command line -> bare command name
 └── listener/
     ├── MOTDListener.java     # Server list MOTD handling
-    └── CommandBlockerListener.java # Whitelist command blocker
+    ├── CommandBlockerListener.java # Whitelist command blocker
+    └── SeenListener.java     # PostLogin/Disconnect -> SeenManager
 ```
 
 ## Architecture
@@ -54,9 +58,11 @@ src/main/java/com/spectrasonic/ProxyCore/
 **Initialization flow** (Main.java):
 1. ConfigManager loads `config.yml` from plugin data directory (copies defaults if missing)
 2. AnnouncementManager created
-3. CommandsManager registers all commands via Velocity's CommandManager
-4. ListenerManager registers all event listeners
-5. AnnouncementManager starts scheduled task if enabled
+3. SeenManager created (loads `seen-data.json` connection history)
+4. CommandsManager registers all commands via Velocity's CommandManager
+5. ListenerManager registers all event listeners
+6. AnnouncementManager starts scheduled task if enabled
+7. On shutdown: announcement task stopped, SeenManager saved to disk
 
 **Command registration** (CommandsManager.java):
 - All commands registered in `registerAll()` method
@@ -92,6 +98,7 @@ Key config sections:
 - `chat`: Broadcast and staff chat formats with `{message}`, `{player}`, `{server}` placeholders
 - `resource-pack`: URL and SHA1 (not yet wired to listener)
 - `command-blocker`: Enabled flag, whitelist, deny message, logging, tab-complete, hide-from-client, proxy-commands escape hatch
+- `seen`: Enabled flag and show-ip flag for the /seen tracking system (data lives in `seen-data.json`, not in config.yml)
 
 ## Gotchas
 
@@ -105,6 +112,8 @@ Key config sections:
 - **Config save on toggle**: `/maintenance` and `/announce` call `configManager.setMaintenance()`/`setAnnouncementsEnabled()` which persist to disk immediately. SnakeYAML `save()` drops comments.
 - **Resource pack config exists** but is not wired to any listener - `isResourcePackEnabled()`, `getResourcePackUrl()`, `getResourcePackSha1()` are unused.
 - **LobbyCommand bypasses permission check** - any player can use /hub. Other commands require explicit permissions.
+- **Seen data is JSON, not YAML**: `SeenManager` persists per-player connection history (`uuid, name, firstJoin, lastJoin, lastQuit, lastIp, lastServer`) in `seen-data.json` via Gson (transitive from velocity-api). Saves happen on every disconnect plus once on proxy shutdown; Velocity fires connection events async, so the blocking file write there is safe. A corrupt file logs a warning and starts with empty history rather than refusing to boot. When adding fields to `SeenRecord`, keep them Gson-friendly (plain fields, no final).
+- **Tab-complete via `suggest()`**: `/whois` and `/seen` are the only commands overriding `SimpleCommand.suggest(Invocation)` — they suggest online player names (plus seen-history names for `/seen`), prefix-filtered case-insensitively. Follow the same pattern for future commands.
 - **No tests**: Project has no test suite.
 
 ## Permissions Reference
@@ -114,6 +123,8 @@ Key config sections:
 | /lobby, /hub, /spawn, /leave | None (all players) | - |
 | /find | ProxyCore.find | op |
 | /goto | ProxyCore.goto | op |
+| /whois | ProxyCore.whois | op |
+| /seen | ProxyCore.seen | op |
 | /staffchat, /sc | ProxyCore.staffchat | op |
 | /gbroadcast | ProxyCore.broadcast | op |
 | /maintenance | ProxyCore.maintenance | op |
