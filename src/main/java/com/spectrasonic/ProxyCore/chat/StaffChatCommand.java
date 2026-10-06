@@ -1,6 +1,7 @@
 package com.spectrasonic.ProxyCore.chat;
 
 import com.spectrasonic.ProxyCore.config.ConfigManager;
+import com.spectrasonic.ProxyCore.util.MessageUtils;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -43,14 +44,12 @@ public class StaffChatCommand implements SimpleCommand {
     @Override
     public void execute(Invocation invocation) {
         if (!(invocation.source() instanceof Player player)) {
-            invocation.source().sendMessage(
-                    MiniMessage.miniMessage().deserialize("<red>This command can only be executed by a player.</red>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.staffchat.only_players");
             return;
         }
 
         if (!player.hasPermission("ProxyCore.staffchat")) {
-            player.sendMessage(
-                    MiniMessage.miniMessage().deserialize("<red>You don't have permission to use staff chat.</red>"));
+            MessageUtils.sendMessage(player, "messages.staffchat.no_permission");
             return;
         }
 
@@ -67,12 +66,10 @@ public class StaffChatCommand implements SimpleCommand {
     private void toggleStaffChat(Player player) {
         UUID uuid = player.getUniqueId();
         if (STAFF_CHAT_TOGGLED.remove(uuid)) {
-            player.sendMessage(MiniMessage.miniMessage()
-                    .deserialize("<green>Staff chat <bold>disabled</bold>.</green>"));
+            MessageUtils.sendSuccessMessage(player, "messages.staffchat.disabled");
         } else {
             STAFF_CHAT_TOGGLED.add(uuid);
-            player.sendMessage(MiniMessage.miniMessage().deserialize(
-                    "<green>Staff chat <bold>enabled</bold>. All your messages will be sent to staff.</green>"));
+            MessageUtils.sendSuccessMessage(player, "messages.staffchat.enabled");
         }
     }
 

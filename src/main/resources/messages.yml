@@ -1,0 +1,146 @@
+# ProxyCore Messages
+# This file is copied to plugins/ProxyCore/messages.yml on first run.
+#
+# Placeholders use the {name} syntax and are filled in at runtime from the code that
+# consumes the key. The colour codes inside each value are MiniMessage; edit them freely.
+#
+# Categories group messages by the command/feature that sends them:
+#   common     - shared between commands (no permission, only players, etc.)
+#   lobby      - /lobby, /hub, /spawn, /leave
+#   goto       - /goto <player>
+#   find       - /find <player>
+#   whois      - /whois <player>
+#   seen       - /seen <player>
+#   broadcast  - /gbroadcast <message>
+#   announce   - /announce true|false|reload
+#   maintenance - /maintenance on|off
+#   motd       - /motd reload
+#   proxycore  - /proxycore, /pcore, /proxyreload
+#   staffchat  - /staffchat, /sc
+#
+# A missing key falls back to a red "<Message not found: KEY>" so broken edits show up
+# immediately in chat instead of silently sending blank messages.
+
+messages:
+    # -----------------------------------------------------------------
+    # Shared strings
+    # -----------------------------------------------------------------
+    common:
+        no_permission: "<red>You don't have permission to use this command.</red>"
+        only_players: "<red>This command can only be executed by a player.</red>"
+        player_not_found: "<red>Player <yellow>{player}</yellow> is not online.</red>"
+        could_not_determine_server: "<red>Could not determine <yellow>{player}</yellow>'s server.</red>"
+
+    # -----------------------------------------------------------------
+    # /lobby, /hub, /spawn, /leave
+    # Placeholders: {server}
+    # -----------------------------------------------------------------
+    lobby:
+        server_not_found: "<red>Server not found: <yellow>{server}</yellow></red>"
+        already_connected: "<yellow>You are already connected to <green>{server}</green>.</yellow>"
+        connecting: "<green>Connecting to <green>{server}</green>...</green>"
+        connection_failed: "<red>Failed to connect to <red>{server}</red>.</red>"
+
+    # -----------------------------------------------------------------
+    # /goto <player>
+    # Placeholders: {player}, {server}
+    # -----------------------------------------------------------------
+    goto:
+        usage: "<red>Usage: /goto <player></red>"
+        cannot_teleport_self: "<yellow>You can't teleport to yourself!</yellow>"
+        already_same_server: "<yellow>You are already on the same server as <green>{player}</green>.</yellow>"
+        teleported: "<green>Teleported to <aqua>{player}</aqua> on <gold>{server}</gold>.</green>"
+        connection_failed: "<red>Failed to connect to {server}.</red>"
+
+    # -----------------------------------------------------------------
+    # /find <player>
+    # Placeholders: {player}, {server}
+    # -----------------------------------------------------------------
+    find:
+        usage: "<red>Usage: /find <player></red>"
+        player_location: "<aqua>{player}</aqua> <gray>is on</gray> <green>{server}</green>"
+        player_not_found_console: "<red>Player <yellow>{player}</yellow> is not online.</red>"
+
+    # -----------------------------------------------------------------
+    # /whois <player>
+    # Placeholders: {player}, {server}, {uuid}, {ip}, {ping}, {version}, {session}
+    # -----------------------------------------------------------------
+    whois:
+        usage: "<red>Usage: /whois <player></red>"
+        player_offline_use_seen: "<red>Player <yellow>{player}</yellow> is not online. Use <white>/seen {player}</white> for connection history.</red>"
+        header: "<dark_aqua>Whois</dark_aqua> <dark_gray>»</dark_gray> <aqua>{player}</aqua> <gray>on</gray> <green>{server}</green>"
+        uuid_line: "<gray>UUID:</gray> <white>{uuid}</white>"
+        ip_ping_version_line: "<gray>IP:</gray> <white>{ip}</white> <gray>Ping:</gray> <white>{ping}ms</white> <gray>Version:</gray> <white>{version}</white>"
+        session_line: "<gray>Session:</gray> <white>{session}</white>"
+
+    # -----------------------------------------------------------------
+    # /seen <player>
+    # Placeholders: {player}, {server}, {duration}, {last_seen}, {first_join},
+    #               {last_session}, {ip}
+    # -----------------------------------------------------------------
+    seen:
+        usage: "<red>Usage: /seen <player></red>"
+        tracking_disabled: "<red>Seen tracking is disabled in the config.</red>"
+        no_record: "<red>No record found for <yellow>{player}</yellow>.</red>"
+        online: "<dark_aqua>Seen</dark_aqua> <dark_gray>»</dark_gray> <aqua>{player}</aqua> <green>is online now</green> <gray>on</gray> <green>{server}</green> <gray>for</gray> <white>{duration}</white>"
+        offline: "<dark_aqua>Seen</dark_aqua> <dark_gray>»</dark_gray> <aqua>{player}</aqua> <red>is offline</red> <gray>last seen</gray> <white>{last_seen}</white>"
+        first_join_last_session: "<gray>First join:</gray> <white>{first_join}</white> <gray>Last session:</gray> <white>{last_session}</white>"
+        last_ip_line: "<gray>Last IP:</gray> <white>{ip}</white>"
+        last_server_line: "<gray>Last server:</gray> <green>{server}</green>"
+
+    # -----------------------------------------------------------------
+    # /gbroadcast <message>
+    # -----------------------------------------------------------------
+    broadcast:
+        usage: "<red>Usage: /gbroadcast <message></red>"
+
+    # -----------------------------------------------------------------
+    # /announce true|false|reload
+    # -----------------------------------------------------------------
+    announce:
+        usage: "<red>Usage: /announce <true|false|reload></red>"
+        status_running: "<green>Announcements: <aqua>running</aqua>. Use <white>/announce false</white> to disable.</green>"
+        status_enabled_not_running: "<yellow>Announcements: <gold>enabled but not running</gold>. Use <white>/announce true</white> to start.</yellow>"
+        status_disabled: "<red>Announcements: <dark_red>disabled</dark_red>. Use <white>/announce true</white> to enable.</red>"
+        enabled_running: "<green>✓ Announcements <bold>enabled</bold> and running.</green>"
+        enabled: "<green>✓ Announcements <bold>enabled</bold>.</green>"
+        disabled: "<green>✓ Announcements <bold>disabled</bold>.</green>"
+        reloaded_running: "<green>✓ Announcements configuration reloaded and restarted.</green>"
+        reloaded_disabled: "<green>✓ Announcements configuration reloaded. Currently disabled.</green>"
+
+    # -----------------------------------------------------------------
+    # /maintenance on|off
+    # Placeholders: none in this category
+    # -----------------------------------------------------------------
+    maintenance:
+        usage: "<red>Usage: /maintenance <on|off></red>"
+        status_enabled: "<yellow>⚠ Maintenance mode is currently <red>ENABLED</red>. Use <white>/maintenance off</white> to disable.</yellow>"
+        status_disabled: "<green>Maintenance mode is currently <aqua>DISABLED</aqua>. Use <white>/maintenance on</white> to enable.</green>"
+        enabled: "<green>✓ Maintenance mode enabled.</green>"
+        disabled: "<green>✓ Maintenance mode disabled.</green>"
+        notify_enabled: "<red>🔒 Maintenance mode has been <bold>ENABLED</bold>.</red>"
+        notify_disabled: "<green>🔓 Maintenance mode has been <bold>DISABLED</bold>.</green>"
+
+    # -----------------------------------------------------------------
+    # /motd reload
+    # -----------------------------------------------------------------
+    motd:
+        usage: "<red>Usage: /motd reload</red>"
+        reloaded: "<green>✓ MOTD configuration reloaded from config.yml.</green>"
+
+    # -----------------------------------------------------------------
+    # /proxycore, /pcore, /proxyreload
+    # -----------------------------------------------------------------
+    proxycore:
+        usage: "<gray>Usage: <white>/proxycore reload</white></gray>"
+        reload_failed: "<red>✗ Could not parse config.yml. Check the console and fix the syntax; the previous configuration is still active.</red>"
+        reload_success: "<green>✓ ProxyCore configuration and messages reloaded (MOTD, announcements, chat formats and command blocker).</green>"
+
+    # -----------------------------------------------------------------
+    # /staffchat, /sc
+    # -----------------------------------------------------------------
+    staffchat:
+        only_players: "<red>This command can only be executed by a player.</red>"
+        no_permission: "<red>You don't have permission to use staff chat.</red>"
+        enabled: "<green>Staff chat <bold>enabled</bold>. All your messages will be sent to staff.</green>"
+        disabled: "<green>Staff chat <bold>disabled</bold>.</green>"

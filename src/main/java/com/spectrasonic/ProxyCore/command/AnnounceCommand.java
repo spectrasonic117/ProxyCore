@@ -1,24 +1,21 @@
 package com.spectrasonic.ProxyCore.command;
 
 import com.spectrasonic.ProxyCore.announce.AnnouncementManager;
+import com.spectrasonic.ProxyCore.util.MessageUtils;
 import com.velocitypowered.api.command.SimpleCommand;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class AnnounceCommand implements SimpleCommand {
 
     private final AnnouncementManager announcementManager;
-    private final MiniMessage miniMessage;
 
     public AnnounceCommand(AnnouncementManager announcementManager) {
         this.announcementManager = announcementManager;
-        this.miniMessage = MiniMessage.miniMessage();
     }
 
     @Override
     public void execute(Invocation invocation) {
         if (!invocation.source().hasPermission("ProxyCore.announce")) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>You don't have permission to use this command.</red>"));
+            MessageUtils.sendNoPermission(invocation.source());
             return;
         }
 
@@ -28,17 +25,11 @@ public class AnnounceCommand implements SimpleCommand {
             boolean running = announcementManager.isRunning();
             boolean enabled = announcementManager.isEnabled();
             if (running) {
-                invocation.source().sendMessage(
-                        miniMessage.deserialize(
-                                "<green>Announcements: <aqua>running</aqua>. Use <white>/announce false</white> to disable.</green>"));
+                MessageUtils.sendMessage(invocation.source(), "messages.announce.status_running");
             } else if (enabled) {
-                invocation.source().sendMessage(
-                        miniMessage.deserialize(
-                                "<yellow>Announcements: <gold>enabled but not running</gold>. Use <white>/announce true</white> to start.</yellow>"));
+                MessageUtils.sendMessage(invocation.source(), "messages.announce.status_enabled_not_running");
             } else {
-                invocation.source().sendMessage(
-                        miniMessage.deserialize(
-                                "<red>Announcements: <dark_red>disabled</dark_red>. Use <white>/announce true</white> to enable.</red>"));
+                MessageUtils.sendMessage(invocation.source(), "messages.announce.status_disabled");
             }
             return;
         }
@@ -47,31 +38,23 @@ public class AnnounceCommand implements SimpleCommand {
         if ("true".equals(action)) {
             announcementManager.enable();
             if (announcementManager.isRunning()) {
-                invocation.source().sendMessage(
-                        miniMessage.deserialize("<green>✓ Announcements <bold>enabled</bold> and running.</green>"));
+                MessageUtils.sendMessage(invocation.source(), "messages.announce.enabled_running");
             } else {
-                invocation.source().sendMessage(
-                        miniMessage.deserialize("<green>✓ Announcements <bold>enabled</bold>.</green>"));
+                MessageUtils.sendMessage(invocation.source(), "messages.announce.enabled");
             }
         } else if ("false".equals(action)) {
             announcementManager.disable();
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<green>✓ Announcements <bold>disabled</bold>.</green>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.announce.disabled");
         } else if ("reload".equals(action)) {
             announcementManager.reload();
             boolean running = announcementManager.isRunning();
             if (running) {
-                invocation.source().sendMessage(
-                        miniMessage
-                                .deserialize("<green>✓ Announcements configuration reloaded and restarted.</green>"));
+                MessageUtils.sendMessage(invocation.source(), "messages.announce.reloaded_running");
             } else {
-                invocation.source().sendMessage(
-                        miniMessage.deserialize(
-                                "<green>✓ Announcements configuration reloaded. Currently disabled.</green>"));
+                MessageUtils.sendMessage(invocation.source(), "messages.announce.reloaded_disabled");
             }
         } else {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>Usage: /announce <true|false|reload></red>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.announce.usage");
         }
     }
 }

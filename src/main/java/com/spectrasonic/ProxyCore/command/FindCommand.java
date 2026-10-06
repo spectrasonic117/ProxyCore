@@ -1,19 +1,18 @@
 package com.spectrasonic.ProxyCore.command;
 
+import com.spectrasonic.ProxyCore.managers.MessageManager;
+import com.spectrasonic.ProxyCore.util.MessageUtils;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.Optional;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class FindCommand implements SimpleCommand {
 
     private final ProxyServer proxy;
-    private final MiniMessage miniMessage;
 
     public FindCommand(ProxyServer proxy) {
         this.proxy = proxy;
-        this.miniMessage = MiniMessage.miniMessage();
     }
 
     @Override
@@ -21,8 +20,7 @@ public class FindCommand implements SimpleCommand {
         String[] args = invocation.arguments();
 
         if (args.length < 1) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>Usage: /find <player></red>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.find.usage");
             return;
         }
 
@@ -34,39 +32,38 @@ public class FindCommand implements SimpleCommand {
         }
 
         if (!sender.hasPermission("ProxyCore.find")) {
-            sender.sendMessage(miniMessage.deserialize("<red>You don't have permission to use this command.</red>"));
+            MessageUtils.sendNoPermission(sender);
             return;
         }
 
         Optional<Player> targetOpt = proxy.getPlayer(targetName);
         if (targetOpt.isEmpty()) {
-            sender.sendMessage(
-                    miniMessage.deserialize("<red>Player <yellow>" + targetName + "</yellow> is not online.</red>"));
+            MessageUtils.sendPlayerNotFound(sender, targetName);
             return;
         }
 
         Player target = targetOpt.get();
         target.getCurrentServer().ifPresentOrElse(
-                conn -> sender.sendMessage(miniMessage.deserialize(
-                        "<aqua>" + target.getUsername() + "</aqua> <gray>is on</gray> <green>"
-                                + conn.getServerInfo().getName() + "</green>")),
-                () -> sender.sendMessage(miniMessage.deserialize(
-                        "<red>Could not determine " + target.getUsername() + "'s server.</red>")));
+                conn -> MessageUtils.sendMessage(sender, "messages.find.player_location",
+                        "player", target.getUsername(),
+                        "server", conn.getServerInfo().getName()),
+                () -> MessageUtils.sendMessage(sender, "messages.common.could_not_determine_server",
+                        "player", target.getUsername()));
     }
 
     private void sendResultToConsole(Invocation invocation, String targetName) {
         Optional<Player> targetOpt = proxy.getPlayer(targetName);
         if (targetOpt.isEmpty()) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>Player " + targetName + " is not online.</red>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.find.player_not_found_console",
+                    "player", targetName);
             return;
         }
         Player target = targetOpt.get();
         target.getCurrentServer().ifPresentOrElse(
-                conn -> invocation.source().sendMessage(miniMessage.deserialize(
-                        "<aqua>" + target.getUsername() + "</aqua> <gray>is on</gray> <green>"
-                                + conn.getServerInfo().getName() + "</green>")),
-                () -> invocation.source().sendMessage(miniMessage.deserialize(
-                        "<red>Could not determine " + target.getUsername() + "'s server.</red>")));
+                conn -> MessageUtils.sendMessage(invocation.source(), "messages.find.player_location",
+                        "player", target.getUsername(),
+                        "server", conn.getServerInfo().getName()),
+                () -> MessageUtils.sendMessage(invocation.source(), "messages.common.could_not_determine_server",
+                        "player", target.getUsername()));
     }
 }

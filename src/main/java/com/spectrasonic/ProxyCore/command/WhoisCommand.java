@@ -1,6 +1,8 @@
 package com.spectrasonic.ProxyCore.command;
 
+import com.spectrasonic.ProxyCore.managers.MessageManager;
 import com.spectrasonic.ProxyCore.managers.SeenManager;
+import com.spectrasonic.ProxyCore.util.MessageUtils;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -8,18 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class WhoisCommand implements SimpleCommand {
 
     private final ProxyServer proxy;
     private final SeenManager seenManager;
-    private final MiniMessage miniMessage;
 
     public WhoisCommand(ProxyServer proxy, SeenManager seenManager) {
         this.proxy = proxy;
         this.seenManager = seenManager;
-        this.miniMessage = MiniMessage.miniMessage();
     }
 
     @Override
@@ -27,24 +26,20 @@ public class WhoisCommand implements SimpleCommand {
         String[] args = invocation.arguments();
 
         if (args.length < 1) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>Usage: /whois <player></red>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.whois.usage");
             return;
         }
 
         if (!invocation.source().hasPermission("ProxyCore.whois")) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>You don't have permission to use this command.</red>"));
+            MessageUtils.sendNoPermission(invocation.source());
             return;
         }
 
         String targetName = args[0];
         Optional<Player> targetOpt = proxy.getPlayer(targetName);
         if (targetOpt.isEmpty()) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>Player <yellow>" + targetName
-                            + "</yellow> is not online. Use <white>/seen " + targetName
-                            + "</white> for connection history.</red>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.whois.player_offline_use_seen",
+                    "player", targetName);
             return;
         }
 
@@ -52,9 +47,9 @@ public class WhoisCommand implements SimpleCommand {
 
         String server = target.getCurrentServer()
                 .map(conn -> conn.getServerInfo().getName())
-                .orElse("<dark_gray>unknown</dark_gray>");
+                .orElse("unknown");
 
-        StringBuilder session = new StringBuilder("<dark_gray>unknown</dark_gray>");
+        StringBuilder session = new StringBuilder("unknown");
         if (seenManager.getRecord(target.getUniqueId()).isPresent()) {
             long lastJoin = seenManager.getRecord(target.getUniqueId()).get().lastJoin;
             if (lastJoin > 0) {
@@ -63,18 +58,17 @@ public class WhoisCommand implements SimpleCommand {
             }
         }
 
-        invocation.source().sendMessage(miniMessage.deserialize(
-                "<dark_aqua>Whois</dark_aqua> <dark_gray>»</dark_gray> <aqua>" + target.getUsername()
-                        + "</aqua> <gray>on</gray> <green>" + server + "</green>"));
-        invocation.source().sendMessage(miniMessage.deserialize(
-                "<gray>UUID:</gray> <white>" + target.getUniqueId() + "</white>"));
-        invocation.source().sendMessage(miniMessage.deserialize(
-                "<gray>IP:</gray> <white>" + getIp(target) + "</white> "
-                        + "<gray>Ping:</gray> <white>" + target.getPing() + "ms</white> "
-                        + "<gray>Version:</gray> <white>" + target.getProtocolVersion().getName()
-                        + "</white>"));
-        invocation.source().sendMessage(miniMessage.deserialize(
-                "<gray>Session:</gray> <white>" + session + "</white>"));
+        MessageUtils.sendMessage(invocation.source(), "messages.whois.header",
+                "player", target.getUsername(),
+                "server", server);
+        MessageUtils.sendMessage(invocation.source(), "messages.whois.uuid_line",
+                "uuid", target.getUniqueId().toString());
+        MessageUtils.sendMessage(invocation.source(), "messages.whois.ip_ping_version_line",
+                "ip", getIp(target),
+                "ping", String.valueOf(target.getPing()),
+                "version", target.getProtocolVersion().getName());
+        MessageUtils.sendMessage(invocation.source(), "messages.whois.session_line",
+                "session", session.toString());
     }
 
     @Override

@@ -94,3 +94,17 @@ seen:
     enabled: true
     # Show the last known IP in /seen results (staff only command anyway)
     show-ip: true
+
+# Server switch message
+# Sends a configurable MiniMessage line each time a player finishes connecting to a backend
+# server. NOTE: Velocity 4.x does not expose an event for its own "Connected to <server>"
+# announcement, so this plugin can only ADD a custom message — to hide Velocity's default,
+# also set `announce-server-translations = false` in `velocity.toml`.
+server-switch:
+    # Master switch for the custom server-switch message
+    enabled: true
+    # MiniMessage format. Placeholders:
+    #   {player}          - player username
+    #   {server}          - destination server name
+    #   {previous_server} - server the player was on before, or "proxy" on first join
+    message: "<dark_gray>[</dark_gray><green>✔</green><dark_gray>]</dark_gray> <white>Connecting to <gradient:green:gold>{server}</gradient>...</white>"

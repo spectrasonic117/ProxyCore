@@ -1,0 +1,113 @@
+{
+  "nextId": 10,
+  "tasks": [
+    {
+      "id": "1",
+      "subject": "Auditar todos los mensajes hardcodeados",
+      "description": "Listar TODOS los mensajes player-facing hardcodeados en commands/, listener/, managers/, announce/ y chat/. Identificar sus categorías y placeholders necesarios.",
+      "status": "completed",
+      "activeForm": "Auditando mensajes hardcodeados",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1791326362648,
+      "updatedAt": 1791326420503
+    },
+    {
+      "id": "2",
+      "subject": "Crear resources/messages.yml",
+      "description": "Crear el archivo messages.yml de recursos con todos los mensajes categorizados (lobby, goto, command, reload, announce, staffchat, etc.) y placeholders {var}.",
+      "status": "completed",
+      "activeForm": "Creando messages.yml",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1791326362650,
+      "updatedAt": 1791326443898
+    },
+    {
+      "id": "3",
+      "subject": "Crear MessageManager singleton",
+      "description": "Crear managers/MessageManager.java con loadMessages(), reloadMessages(), getMessage(key), getMessage(key, replacements...). Adaptar de Bukkit a Velocity (Path, SnakeYAML). Fallback para keys inexistentes.",
+      "status": "completed",
+      "activeForm": "Creando MessageManager",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1791326362653,
+      "updatedAt": 1791326470354
+    },
+    {
+      "id": "4",
+      "subject": "Crear MessageUtils",
+      "description": "Crear util/MessageUtils.java con helpers: sendMessage, rawMessage, successMessage, alertMessage, denyMessage, warningMessage, infoMessage. Adaptar para Velocity (Audience, ProxyServer.getConsoleCommandSource()).",
+      "status": "completed",
+      "activeForm": "Creando MessageUtils",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1791326362654,
+      "updatedAt": 1791326483079
+    },
+    {
+      "id": "5",
+      "subject": "Extender ConfigManager",
+      "description": "Añadir loadMessages(), reloadMessages() y reload() al ConfigManager existente para que el reload unifique config + messages.",
+      "status": "completed",
+      "activeForm": "Extendiendo ConfigManager",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1791326362655,
+      "updatedAt": 1791326512045
+    },
+    {
+      "id": "6",
+      "subject": "Inicializar MessageManager en Main.java",
+      "description": "Conectar MessageManager con ConfigManager en onEnable() para que cargue automáticamente al iniciar.",
+      "status": "completed",
+      "activeForm": "Inicializando MessageManager",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1791326362656,
+      "updatedAt": 1791326588923
+    },
+    {
+      "id": "7",
+      "subject": "Refactorizar todos los comandos",
+      "description": "Migrar TODOS los comandos: LobbyCommand, GotoCommand, FindCommand, WhoisCommand, SeenCommand, BroadcastCommand, AnnounceCommand, MaintenanceCommand, MotdReloadCommand, ProxyCoreCommand, StaffChatCommand.",
+      "status": "completed",
+      "activeForm": "Refactorizando comandos",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1791326362657,
+      "updatedAt": 1791326662398
+    },
+    {
+      "id": "8",
+      "subject": "Refactorizar listeners y managers",
+      "description": "Migrar mensajes de AnnouncementManager, MOTDListener, CommandBlockerListener (si tiene mensajes hardcoded), SeenListener, etc.",
+      "status": "completed",
+      "activeForm": "Refactorizando listeners/managers",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1791326362657,
+      "updatedAt": 1791326695677
+    },
+    {
+      "id": "9",
+      "subject": "Build y verificar",
+      "description": "Compilar el proyecto con gradle build, verificar que no haya errores y que el plugin arranque limpio.",
+      "status": "in_progress",
+      "activeForm": "Compilando proyecto",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1791326362658,
+      "updatedAt": 1791326695678
+    }
+  ]
+}

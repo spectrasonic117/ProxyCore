@@ -1,5 +1,6 @@
 package com.spectrasonic.ProxyCore.config;
 
+import com.spectrasonic.ProxyCore.managers.MessageManager;
 import com.spectrasonic.ProxyCore.util.CommandNormalizer;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -16,6 +17,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.slf4j.Logger;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -33,15 +35,30 @@ public class ConfigManager {
             "proxycore", "login", "register", "changepassword");
 
     private final Path configPath;
+    private final Path dataDirectory;
+    private final Logger logger;
     private final Yaml yaml;
     private Map<String, Object> config;
 
-    public ConfigManager(Path dataDirectory) {
+    /**
+     * Loads {@code config.yml} from {@code dataDirectory} and wires up {@link MessageManager} so a
+     * single call from {@code Main#onProxyInitialization} boots the whole configuration surface.
+     *
+     * @param dataDirectory plugin data folder injected by Velocity's {@code @DataDirectory}
+     * @param logger        used by {@link MessageManager} to log copy/reload/error events
+     */
+    public ConfigManager(Path dataDirectory, Logger logger) {
+        this.dataDirectory = dataDirectory;
+        this.logger = logger;
         this.configPath = dataDirectory.resolve("config.yml");
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         options.setPrettyFlow(true);
         this.yaml = new Yaml(options);
+        // Boot messages.yml eagerly so the first command that calls MessageManager.getMessage(...)
+        // does not race against an uninitialised singleton. init() is idempotent, so any later
+        // reload that re-runs the constructor is a no-op.
+        MessageManager.init(dataDirectory, logger);
     }
 
     public void load() {
@@ -121,6 +138,37 @@ public class ConfigManager {
             this.config = previous != null ? previous : createDefaults();
             return false;
         }
+    }
+
+    /**
+     * Reloads {@code messages.yml} via {@link MessageManager#reload()}. Kept as a separate method
+     * so callers that only want to refresh messages (e.g. a future dedicated {@code /messages
+     * reload} command) do not have to bounce config.yml through SnakeYAML too.
+     *
+     * @return {@code true} when the file was read successfully, {@code false} when it was missing
+     *         or corrupt
+     */
+    public boolean reloadMessages() {
+        MessageManager manager = MessageManager.getInstance();
+        return manager != null && manager.reload();
+    }
+
+    /**
+     * Convenience that reloads {@code config.yml} AND {@code messages.yml}. Returns {@code true}
+     * only when both reloads succeed - the caller can then send a single confirmation message.
+     */
+    public boolean reloadAll() {
+        boolean configOk = reload();
+        boolean messagesOk = reloadMessages();
+        return configOk && messagesOk;
+    }
+
+    public Path getDataDirectory() {
+        return dataDirectory;
+    }
+
+    public Logger getLogger() {
+        return logger;
     }
 
     public String getTargetServer() {
@@ -317,6 +365,18 @@ public class ConfigManager {
         return getBoolean(getSection("seen"), "show-ip", true);
     }
 
+    // --- Server switch ---
+
+    public boolean isServerSwitchEnabled() {
+        return getBoolean(getSection("server-switch"), "enabled", true);
+    }
+
+    public String getServerSwitchMessage() {
+        return getString(getSection("server-switch"), "message",
+                "<dark_gray>[</dark_gray><green>✔</green><dark_gray>]</dark_gray> "
+                        + "<white>Connecting to <gradient:green:gold>{server}</gradient>...</white>");
+    }
+
     // --- Helpers ---
 
     @SuppressWarnings("unchecked")
@@ -428,6 +488,13 @@ public class ConfigManager {
         seen.put("enabled", true);
         seen.put("show-ip", true);
         defaults.put("seen", seen);
+
+        Map<String, Object> serverSwitch = new LinkedHashMap<>();
+        serverSwitch.put("enabled", true);
+        serverSwitch.put("message",
+                "<dark_gray>[</dark_gray><green>✔</green><dark_gray>]</dark_gray> "
+                        + "<white>Connecting to <gradient:green:gold>{server}</gradient>...</white>");
+        defaults.put("server-switch", serverSwitch);
 
         return defaults;
     }

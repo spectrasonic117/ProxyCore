@@ -1,0 +1,81 @@
+{
+  "nextId": 6,
+  "tasks": [
+    {
+      "id": "1",
+      "subject": "Add server-switch section to config.yml",
+      "description": "Add a new top-level `server-switch` section to src/main/resources/config.yml with:\n- `enabled`: master toggle (boolean, default true)\n- `message`: MiniMessage format string with `{player}`, `{server}`, `{previous_server}` placeholders\nDocument placeholders inline. (No `cancel-default` flag — cancellation is unconditional when the feature is enabled, since replacing the default is the whole point.)",
+      "status": "completed",
+      "activeForm": "Updating config.yml",
+      "metadata": {},
+      "blocks": [
+        "2"
+      ],
+      "blockedBy": [],
+      "createdAt": 1791316789192,
+      "updatedAt": 1791316955869
+    },
+    {
+      "id": "2",
+      "subject": "Extend ConfigManager with server-switch getters and defaults",
+      "description": "In src/main/java/com/spectrasonic/ProxyCore/config/ConfigManager.java:\n- Add `isServerSwitchEnabled()` and `getServerSwitchMessage()` getters (follow same pattern as command-blocker).\n- Extend `createDefaults()` to include the `server-switch` section with sensible English defaults.\n- Section is auto-merged by existing `applyDefaults()` on reload, no extra wiring required.",
+      "status": "completed",
+      "activeForm": "Updating ConfigManager",
+      "metadata": {},
+      "blocks": [
+        "3"
+      ],
+      "blockedBy": [
+        "1"
+      ],
+      "createdAt": 1791316789194,
+      "updatedAt": 1791316970273
+    },
+    {
+      "id": "3",
+      "subject": "Create ServerSwitchListener",
+      "description": "New file at src/main/java/com/spectrasonic/ProxyCore/listener/ServerSwitchListener.java.\nTwo `@Subscribe` handlers:\n1. `onServerConnected(ServerConnectedEvent)`: build the MiniMessage-formatted message from config and send it via `player.sendMessage(...)`. Resolve `{server}` from `event.getServer().getServerInfo().getName()` and `{previous_server}` from `event.getPreviousServer()` (Optional) falling back to \"proxy\". Skip when `enabled=false`.\n2. `onChat(ChatEvent)`: when feature is enabled, detect `TranslatableComponent` with key `velocity.command.server-connected` and unconditionally call `event.setResult(ChatEvent.ChatResult.denied())`.\nMirror conventions from MOTDListener (constructor injection of ConfigManager, private final MiniMessage field).",
+      "status": "completed",
+      "activeForm": "Creating ServerSwitchListener",
+      "metadata": {},
+      "blocks": [
+        "4"
+      ],
+      "blockedBy": [
+        "2"
+      ],
+      "createdAt": 1791316789195,
+      "updatedAt": 1791316978001
+    },
+    {
+      "id": "4",
+      "subject": "Register ServerSwitchListener in ListenerManager",
+      "description": "In src/main/java/com/spectrasonic/ProxyCore/managers/ListenerManager.java#registerAll(), instantiate `new ServerSwitchListener(configManager)` and register it with `proxy.getEventManager().register(plugin, listener)`, alongside the existing MOTD, CommandBlocker and Seen listeners.",
+      "status": "completed",
+      "activeForm": "Registering listener",
+      "metadata": {},
+      "blocks": [
+        "5"
+      ],
+      "blockedBy": [
+        "3"
+      ],
+      "createdAt": 1791316789196,
+      "updatedAt": 1791316986903
+    },
+    {
+      "id": "5",
+      "subject": "Verify build with gradle build",
+      "description": "Run `gradle build` to confirm the new listener compiles cleanly with Java 25, no warnings on unused imports or raw types. The plugin must produce a JAR in `out/ProxyCore-<version>.jar`.",
+      "status": "completed",
+      "activeForm": "Building with gradle",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [
+        "4"
+      ],
+      "createdAt": 1791316789196,
+      "updatedAt": 1791317147879
+    }
+  ]
+}

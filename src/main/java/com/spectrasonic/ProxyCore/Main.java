@@ -49,7 +49,7 @@ public class Main {
     public void onProxyInitialization(ProxyInitializeEvent event) {
         sendLogo();
 
-        ConfigManager configManager = new ConfigManager(dataDirectory);
+        ConfigManager configManager = new ConfigManager(dataDirectory, logger);
         configManager.load();
         logger.info("Target server: {}", configManager.getTargetServer());
 

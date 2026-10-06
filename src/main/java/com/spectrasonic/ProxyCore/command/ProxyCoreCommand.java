@@ -2,15 +2,16 @@ package com.spectrasonic.ProxyCore.command;
 
 import com.spectrasonic.ProxyCore.announce.AnnouncementManager;
 import com.spectrasonic.ProxyCore.config.ConfigManager;
+import com.spectrasonic.ProxyCore.util.MessageUtils;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import java.util.Locale;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 /**
  * Root command for proxy-wide administration. Currently only supports {@code reload}, which
- * re-reads {@code config.yml} and restarts the scheduled announcements so every module picks up
- * the new values without a proxy restart.
+ * re-reads {@code config.yml} AND {@code messages.yml} (so every translation/message edit takes
+ * effect without a proxy restart) and restarts the scheduled announcements so every module picks
+ * up the new values.
  */
 public class ProxyCoreCommand implements SimpleCommand {
 
@@ -18,12 +19,10 @@ public class ProxyCoreCommand implements SimpleCommand {
 
     private final ConfigManager configManager;
     private final AnnouncementManager announcementManager;
-    private final MiniMessage miniMessage;
 
     public ProxyCoreCommand(ConfigManager configManager, AnnouncementManager announcementManager) {
         this.configManager = configManager;
         this.announcementManager = announcementManager;
-        this.miniMessage = MiniMessage.miniMessage();
     }
 
     @Override
@@ -31,8 +30,7 @@ public class ProxyCoreCommand implements SimpleCommand {
         // The proxy console is always allowed; players need the permission.
         if (invocation.source() instanceof Player
                 && !invocation.source().hasPermission(RELOAD_PERMISSION)) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>You don't have permission to use this command.</red>"));
+            MessageUtils.sendNoPermission(invocation.source());
             return;
         }
 
@@ -51,22 +49,17 @@ public class ProxyCoreCommand implements SimpleCommand {
     }
 
     private void reload(Invocation invocation) {
-        if (!configManager.reload()) {
-            invocation.source().sendMessage(miniMessage.deserialize(
-                    "<red>✗ Could not parse config.yml. Check the console and fix the syntax; "
-                            + "the previous configuration is still active.</red>"));
+        if (!configManager.reloadAll()) {
+            MessageUtils.sendMessage(invocation.source(), "messages.proxycore.reload_failed");
             return;
         }
 
         announcementManager.restart();
 
-        invocation.source().sendMessage(miniMessage.deserialize(
-                "<green>✓ ProxyCore configuration reloaded (MOTD, announcements, chat formats and "
-                        + "command blocker).</green>"));
+        MessageUtils.sendMessage(invocation.source(), "messages.proxycore.reload_success");
     }
 
     private void showUsage(Invocation invocation) {
-        invocation.source().sendMessage(
-                miniMessage.deserialize("<gray>Usage: <white>/proxycore reload</white></gray>"));
+        MessageUtils.sendMessage(invocation.source(), "messages.proxycore.usage");
     }
 }

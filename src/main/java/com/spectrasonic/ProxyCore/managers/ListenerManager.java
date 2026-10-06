@@ -4,6 +4,7 @@ import com.spectrasonic.ProxyCore.config.ConfigManager;
 import com.spectrasonic.ProxyCore.listener.CommandBlockerListener;
 import com.spectrasonic.ProxyCore.listener.MOTDListener;
 import com.spectrasonic.ProxyCore.listener.SeenListener;
+import com.spectrasonic.ProxyCore.listener.ServerSwitchListener;
 import com.velocitypowered.api.proxy.ProxyServer;
 import org.slf4j.Logger;
 
@@ -33,5 +34,8 @@ public class ListenerManager {
 
         SeenListener seenListener = new SeenListener(configManager, seenManager);
         proxy.getEventManager().register(plugin, seenListener);
+
+        ServerSwitchListener serverSwitchListener = new ServerSwitchListener(configManager);
+        proxy.getEventManager().register(plugin, serverSwitchListener);
     }
 }

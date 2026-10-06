@@ -1,20 +1,19 @@
 package com.spectrasonic.ProxyCore.command;
 
+import com.spectrasonic.ProxyCore.managers.MessageManager;
+import com.spectrasonic.ProxyCore.util.MessageUtils;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class GotoCommand implements SimpleCommand {
 
     private final ProxyServer proxy;
-    private final MiniMessage miniMessage;
 
     public GotoCommand(ProxyServer proxy) {
         this.proxy = proxy;
-        this.miniMessage = MiniMessage.miniMessage();
     }
 
     @Override
@@ -22,34 +21,32 @@ public class GotoCommand implements SimpleCommand {
         String[] args = invocation.arguments();
 
         if (args.length < 1) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>Usage: /goto <player></red>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.goto.usage");
             return;
         }
 
         String targetName = args[0];
 
         if (!(invocation.source() instanceof Player sender)) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>This command can only be executed by a player.</red>"));
+            MessageUtils.sendOnlyPlayers(invocation.source());
             return;
         }
 
         if (!sender.hasPermission("ProxyCore.goto")) {
-            sender.sendMessage(miniMessage.deserialize("<red>You don't have permission to use this command.</red>"));
+            MessageUtils.sendNoPermission(sender);
             return;
         }
 
         Optional<Player> targetOpt = proxy.getPlayer(targetName);
         if (targetOpt.isEmpty()) {
-            sender.sendMessage(
-                    miniMessage.deserialize("<red>Player <yellow>" + targetName + "</yellow> is not online.</red>"));
+            MessageUtils.sendPlayerNotFound(sender, targetName);
             return;
         }
 
         Player target = targetOpt.get();
         if (target.equals(sender)) {
-            sender.sendMessage(miniMessage.deserialize("<yellow>You can't teleport to yourself!</yellow>"));
+            MessageUtils.rawMessage(sender,
+                    MessageManager.getMessage("messages.goto.cannot_teleport_self"));
             return;
         }
 
@@ -57,8 +54,8 @@ public class GotoCommand implements SimpleCommand {
                 .map(conn -> conn.getServer());
 
         if (targetServer.isEmpty()) {
-            sender.sendMessage(
-                    miniMessage.deserialize("<red>Could not determine " + target.getUsername() + "'s server.</red>"));
+            MessageUtils.sendMessage(sender, "messages.common.could_not_determine_server",
+                    "player", target.getUsername());
             return;
         }
 
@@ -67,20 +64,23 @@ public class GotoCommand implements SimpleCommand {
 
         sender.getCurrentServer().ifPresent(currentConn -> {
             if (currentConn.getServerInfo().getName().equalsIgnoreCase(targetServerName)) {
-                sender.sendMessage(miniMessage.deserialize(
-                        "<yellow>You are already on the same server as " + target.getUsername() + ".</yellow>"));
+                MessageUtils.rawMessage(sender,
+                        MessageManager.getMessage("messages.goto.already_same_server",
+                                "player", target.getUsername()));
                 return;
             }
         });
 
         sender.createConnectionRequest(server).connect().thenAccept(result -> {
             if (result.isSuccessful()) {
-                sender.sendMessage(miniMessage.deserialize(
-                        "<green>Teleported to <aqua>" + target.getUsername() + "</aqua> on <gold>" + targetServerName
-                                + "</gold>.</green>"));
+                MessageUtils.successMessage(sender,
+                        MessageManager.getMessage("messages.goto.teleported",
+                                "player", target.getUsername(),
+                                "server", targetServerName));
             } else {
-                sender.sendMessage(miniMessage.deserialize(
-                        "<red>Failed to connect to " + targetServerName + ".</red>"));
+                MessageUtils.denyMessage(sender,
+                        MessageManager.getMessage("messages.goto.connection_failed",
+                                "server", targetServerName));
             }
         });
     }

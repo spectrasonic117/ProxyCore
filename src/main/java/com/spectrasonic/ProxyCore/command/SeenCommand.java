@@ -1,8 +1,10 @@
 package com.spectrasonic.ProxyCore.command;
 
 import com.spectrasonic.ProxyCore.config.ConfigManager;
+import com.spectrasonic.ProxyCore.managers.MessageManager;
 import com.spectrasonic.ProxyCore.managers.SeenManager;
 import com.spectrasonic.ProxyCore.managers.SeenManager.SeenRecord;
+import com.spectrasonic.ProxyCore.util.MessageUtils;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -16,7 +18,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class SeenCommand implements SimpleCommand {
 
@@ -25,13 +26,11 @@ public class SeenCommand implements SimpleCommand {
     private final ProxyServer proxy;
     private final ConfigManager configManager;
     private final SeenManager seenManager;
-    private final MiniMessage miniMessage;
 
     public SeenCommand(ProxyServer proxy, ConfigManager configManager, SeenManager seenManager) {
         this.proxy = proxy;
         this.configManager = configManager;
         this.seenManager = seenManager;
-        this.miniMessage = MiniMessage.miniMessage();
     }
 
     @Override
@@ -39,20 +38,17 @@ public class SeenCommand implements SimpleCommand {
         String[] args = invocation.arguments();
 
         if (args.length < 1) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>Usage: /seen <player></red>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.seen.usage");
             return;
         }
 
         if (!invocation.source().hasPermission("ProxyCore.seen")) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>You don't have permission to use this command.</red>"));
+            MessageUtils.sendNoPermission(invocation.source());
             return;
         }
 
         if (!configManager.isSeenEnabled()) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>Seen tracking is disabled in the config.</red>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.seen.tracking_disabled");
             return;
         }
 
@@ -66,9 +62,8 @@ public class SeenCommand implements SimpleCommand {
 
         Optional<SeenRecord> recordOpt = seenManager.findByName(targetName);
         if (recordOpt.isEmpty()) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>No record found for <yellow>" + targetName
-                            + "</yellow>.</red>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.seen.no_record",
+                    "player", targetName);
             return;
         }
 
@@ -78,7 +73,7 @@ public class SeenCommand implements SimpleCommand {
     private void sendOnlineInfo(Invocation invocation, Player target) {
         String server = target.getCurrentServer()
                 .map(conn -> conn.getServerInfo().getName())
-                .orElse("<dark_gray>unknown</dark_gray>");
+                .orElse("unknown");
 
         String connectedFor = seenManager.getRecord(target.getUniqueId())
                 .map(record -> record.lastJoin)
@@ -86,10 +81,10 @@ public class SeenCommand implements SimpleCommand {
                 .map(lastJoin -> SeenManager.formatDuration(System.currentTimeMillis() - lastJoin))
                 .orElse("unknown");
 
-        invocation.source().sendMessage(miniMessage.deserialize(
-                "<dark_aqua>Seen</dark_aqua> <dark_gray>»</dark_gray> <aqua>" + target.getUsername()
-                        + "</aqua> <green>is online now</green> <gray>on</gray> <green>" + server
-                        + "</green> <gray>for</gray> <white>" + connectedFor + "</white>"));
+        MessageUtils.sendMessage(invocation.source(), "messages.seen.online",
+                "player", target.getUsername(),
+                "server", server,
+                "duration", connectedFor);
     }
 
     private void sendOfflineInfo(Invocation invocation, SeenRecord record) {
@@ -103,24 +98,20 @@ public class SeenCommand implements SimpleCommand {
                 ? SeenManager.formatDuration(record.lastQuit - record.lastJoin)
                 : "unknown";
 
-        invocation.source().sendMessage(miniMessage.deserialize(
-                "<dark_aqua>Seen</dark_aqua> <dark_gray>»</dark_gray> <aqua>" + record.name
-                        + "</aqua> <red>is offline</red> <gray>last seen</gray> <white>" + lastSeen
-                        + "</white>"));
-        invocation.source().sendMessage(miniMessage.deserialize(
-                "<gray>First join:</gray> <white>" + formatDate(record.firstJoin) + "</white> "
-                        + "<gray>Last session:</gray> <white>" + lastSession + "</white>"));
+        MessageUtils.sendMessage(invocation.source(), "messages.seen.offline",
+                "player", record.name,
+                "last_seen", lastSeen);
+        MessageUtils.sendMessage(invocation.source(), "messages.seen.first_join_last_session",
+                "first_join", formatDate(record.firstJoin),
+                "last_session", lastSession);
 
-        StringBuilder details = new StringBuilder();
         if (configManager.isSeenShowIp() && !record.lastIp.isEmpty()) {
-            details.append("<gray>Last IP:</gray> <white>").append(record.lastIp).append("</white> ");
+            MessageUtils.sendMessage(invocation.source(), "messages.seen.last_ip_line",
+                    "ip", record.lastIp);
         }
         if (!record.lastServer.isEmpty()) {
-            details.append("<gray>Last server:</gray> <green>").append(record.lastServer)
-                    .append("</green>");
-        }
-        if (details.length() > 0) {
-            invocation.source().sendMessage(miniMessage.deserialize(details.toString()));
+            MessageUtils.sendMessage(invocation.source(), "messages.seen.last_server_line",
+                    "server", record.lastServer);
         }
     }
 

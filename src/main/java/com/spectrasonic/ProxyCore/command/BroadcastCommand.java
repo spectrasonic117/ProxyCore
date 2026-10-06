@@ -1,6 +1,7 @@
 package com.spectrasonic.ProxyCore.command;
 
 import com.spectrasonic.ProxyCore.config.ConfigManager;
+import com.spectrasonic.ProxyCore.util.MessageUtils;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -30,15 +31,13 @@ public class BroadcastCommand implements SimpleCommand {
     @Override
     public void execute(Invocation invocation) {
         if (!invocation.source().hasPermission("ProxyCore.broadcast")) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>You don't have permission to use this command.</red>"));
+            MessageUtils.sendNoPermission(invocation.source());
             return;
         }
 
         String[] args = invocation.arguments();
         if (args.length == 0) {
-            invocation.source().sendMessage(
-                    miniMessage.deserialize("<red>Usage: /gbroadcast <message></red>"));
+            MessageUtils.sendMessage(invocation.source(), "messages.broadcast.usage");
             return;
         }
 
