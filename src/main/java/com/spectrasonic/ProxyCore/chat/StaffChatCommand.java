@@ -66,10 +66,10 @@ public class StaffChatCommand implements SimpleCommand {
     private void toggleStaffChat(Player player) {
         UUID uuid = player.getUniqueId();
         if (STAFF_CHAT_TOGGLED.remove(uuid)) {
-            MessageUtils.sendSuccessMessage(player, "messages.staffchat.disabled");
+            MessageUtils.sendMessage(player, "messages.staffchat.disabled");
         } else {
             STAFF_CHAT_TOGGLED.add(uuid);
-            MessageUtils.sendSuccessMessage(player, "messages.staffchat.enabled");
+            MessageUtils.sendMessage(player, "messages.staffchat.enabled");
         }
     }
 

@@ -1,0 +1,17 @@
+{
+  "nextId": 2,
+  "tasks": [
+    {
+      "id": "1",
+      "subject": "Switch all messages to rawMessage without prefixes",
+      "description": "Change all message sending methods in ProxyCore to rawMessage/sendMessage without prefixes. Remove or update prefix methods in MessageUtils so no prefixes are prepended.",
+      "status": "completed",
+      "activeForm": "Updating MessageUtils and commands",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1791432369280,
+      "updatedAt": 1791432790411
+    }
+  ]
+}

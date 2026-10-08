@@ -73,14 +73,14 @@ public class GotoCommand implements SimpleCommand {
 
         sender.createConnectionRequest(server).connect().thenAccept(result -> {
             if (result.isSuccessful()) {
-                MessageUtils.successMessage(sender,
-                        MessageManager.getMessage("messages.goto.teleported",
+                MessageUtils.sendMessage(sender,
+                        "messages.goto.teleported",
                                 "player", target.getUsername(),
-                                "server", targetServerName));
+                                "server", targetServerName);
             } else {
-                MessageUtils.denyMessage(sender,
-                        MessageManager.getMessage("messages.goto.connection_failed",
-                                "server", targetServerName));
+                MessageUtils.sendMessage(sender,
+                        "messages.goto.connection_failed",
+                                "server", targetServerName);
             }
         });
     }

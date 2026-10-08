@@ -53,7 +53,7 @@ public class MaintenanceCommand implements SimpleCommand {
     private void notifyStaff(String message) {
         for (Player player : proxy.getAllPlayers()) {
             if (player.hasPermission("ProxyCore.maintenance")) {
-                MessageUtils.warningMessage(player, message);
+                MessageUtils.rawMessage(player, message);
             }
         }
     }

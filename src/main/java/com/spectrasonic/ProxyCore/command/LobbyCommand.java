@@ -47,11 +47,11 @@ public class LobbyCommand implements SimpleCommand {
 
         player.createConnectionRequest(server.get()).connect().thenAccept(result -> {
             if (result.isSuccessful()) {
-                MessageUtils.successMessage(player,
-                        MessageManager.getMessage("messages.lobby.connecting", "server", targetServer));
+                MessageUtils.sendMessage(player,
+                        "messages.lobby.connecting", "server", targetServer);
             } else {
-                MessageUtils.denyMessage(player,
-                        MessageManager.getMessage("messages.lobby.connection_failed", "server", targetServer));
+                MessageUtils.sendMessage(player,
+                        "messages.lobby.connection_failed", "server", targetServer);
             }
         });
     }
